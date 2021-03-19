@@ -1,0 +1,1 @@
+rootProject.name = "patreon-dl-server"
