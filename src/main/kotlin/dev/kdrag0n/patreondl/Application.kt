@@ -11,10 +11,11 @@ import io.ktor.features.*
 import io.ktor.serialization.*
 import io.ktor.sessions.*
 import io.ktor.auth.jwt.*
-import com.auth0.jwt.JWT
-import com.auth0.jwt.JWTVerifier
-import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.application.*
+import io.ktor.client.features.json.*
+import io.ktor.client.features.json.serializer.*
+import io.ktor.client.request.*
+import io.ktor.http.content.*
 import io.ktor.response.*
 import io.ktor.request.*
 
@@ -25,55 +26,28 @@ fun main(args: Array<String>): Unit =
  * Please note that you can use any other name instead of *module*.
  * Also note that you can have more then one modules in your application.
  * */
+@KtorExperimentalLocationsAPI
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
-fun Application.module(testing: Boolean = false) {
-
-    install(Locations) {
-    }
-    val loginProviders = listOf(
-        OAuthServerSettings.OAuth2ServerSettings(
-            name = "github",
-            authorizeUrl = "https://github.com/login/oauth/authorize",
-            accessTokenUrl = "https://github.com/login/oauth/access_token",
-            clientId = "***",
-            clientSecret = "***"
-        )
-    ).associateBy { it.name }
-    authentication {
-        oauth("gitHubOAuth") {
-            client = HttpClient(Apache)
-            providerLookup = { loginProviders[application.locations.resolve<login>(login::class, this).type] }
-            urlProvider = { url(login(it.name)) }
-        }
-    }
+fun Application.module(production: Boolean = false) {
+    // Typed routes
+    install(Locations) {}
 
     install(ContentNegotiation) {
         json()
     }
 
     install(PartialContent) {
-        // Maximum number of ranges that will be accepted from a HTTP request.
-        // If the HTTP request specifies more ranges, they will all be merged into a single range.
         maxRangeCount = 10
     }
+
     install(Sessions) {
-        cookie<MySession>("MY_SESSION") {
-            cookie.extensions["SameSite"] = "lax"
+        cookie<PatronSession>("PATRON_SESSION") {
+            cookie.extensions["SameSite"] = "Strict"
+            cookie.secure = production
         }
     }
-    val jwtIssuer = environment.config.property("jwt.domain").getString()
-    val jwtAudience = environment.config.property("jwt.audience").getString()
-    val jwtRealm = environment.config.property("jwt.realm").getString()
-    authentication {
-        jwt {
-            realm = jwtRealm
-            verifier(makeJwtVerifier(jwtIssuer, jwtAudience))
-            validate { credential ->
-                if (credential.payload.audience.contains(jwtAudience)) JWTPrincipal(credential.payload) else null
-            }
-        }
-    }
+
     install(AutoHeadResponse)
     install(CORS) {
         method(HttpMethod.Options)
@@ -85,11 +59,33 @@ fun Application.module(testing: Boolean = false) {
         allowCredentials = true
         anyHost() // @TODO: Don't do this in production if possible. Try to limit it.
     }
-    routing {
-        get("/") {
-            call.respondText("Hello World!")
+
+    val loginProviders = listOf(
+        OAuthServerSettings.OAuth2ServerSettings(
+            name = "patreon",
+            authorizeUrl = "https://www.patreon.com/oauth2/authorize",
+            accessTokenUrl = "https://www.patreon.com/api/oauth2/token",
+            clientId = "***",
+            clientSecret = "***",
+            requestMethod = HttpMethod.Post,
+        )
+    ).associateBy { it.name }
+
+    val httpClient = HttpClient(Apache)
+
+    authentication {
+        oauth("patreonOAuth") {
+            client = httpClient
+            providerLookup = { loginProviders[application.locations.resolve<login>(login::class, this).type] }
+            urlProvider = { url(login(it.name)) }
+        }
+
+        session<PatronSession>("patronSession") {
+            challenge("/login/patreon")
+            validate { session -> session }
         }
     }
+
     routing {
         get<MyLocation> {
             call.respondText("Location: name=${it.name}, arg1=${it.arg1}, arg2=${it.arg2}")
@@ -101,9 +97,8 @@ fun Application.module(testing: Boolean = false) {
         get<Type.List> {
             call.respondText("Inside $it")
         }
-    }
-    routing {
-        authenticate("gitHubOAuth") {
+
+        authenticate("patreonOAuth") {
             location<login>() {
                 param("error") {
                     handle {
@@ -113,25 +108,20 @@ fun Application.module(testing: Boolean = false) {
 
                 handle {
                     val principal = call.authentication.principal<OAuthAccessTokenResponse>()
-                    if (principal != null) {
-                        // TODO: call.loggedInSuccessResponse(principal)
-                    } else {
-                        // TODO: call.loginPage()
+                    if (principal !is OAuthAccessTokenResponse.OAuth2) {
+                        return@handle
                     }
+
+                    call.sessions.set(PatronSession(principal.accessToken))
+                    call.respondText("Access Token = ${principal.accessToken}")
                 }
             }
         }
-    }
-    routing {
-        get("/json/kotlinx-serialization") {
-            call.respond(mapOf("hello" to "world"))
-        }
-    }
-    routing {
-        get("/session/increment") {
-            val session = call.sessions.get<MySession>() ?: MySession()
-            call.sessions.set(session.copy(count = session.count + 1))
-            call.respondText("Counter is ${session.count}. Refresh to increment.")
+
+        authenticate("patronSession") {
+            static("exclusive") {
+                files("exclusive_src")
+            }
         }
     }
 }
@@ -149,11 +139,6 @@ data class Type(val name: String) {
 
 @Location("/login/{type?}")
 class login(val type: String = "")
-data class MySession(val count: Int = 0)
-
-private val algorithm = Algorithm.HMAC256("secret")
-private fun makeJwtVerifier(issuer: String, audience: String): JWTVerifier = JWT
-    .require(algorithm)
-    .withAudience(audience)
-    .withIssuer(issuer)
-    .build()
+data class PatronSession(
+    val accessToken: String,
+) : Principal

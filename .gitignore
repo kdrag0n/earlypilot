@@ -2,3 +2,5 @@
 .idea
 *.jar
 .gradle
+build/
+exclusive_src/
