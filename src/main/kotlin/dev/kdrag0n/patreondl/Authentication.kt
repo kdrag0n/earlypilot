@@ -9,6 +9,8 @@ import io.ktor.locations.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
+import io.ktor.util.*
+import java.security.SecureRandom
 
 private const val PATREON_OAUTH_AUTHORIZE = "https://www.patreon.com/oauth2/authorize"
 private const val PATREON_OAUTH_ACCESS_TOKEN = "https://www.patreon.com/api/oauth2/token"
@@ -41,6 +43,21 @@ fun Application.authModule(production: Boolean) {
         cookie<PatronSession>("patronSession") {
             cookie.extensions["SameSite"] = "Strict"
             cookie.secure = production
+
+            val encKey = environment.config.propertyOrNull("web.sessionEncryptKey")
+            if (encKey == null) {
+                environment.log.warn("No session encryption key; cookie will not be encrypted or authenticated")
+            } else {
+                val authKey = environment.config.property("web.sessionAuthKey").getString()
+                val ivGen = SecureRandom.getInstanceStrong()
+
+                transform(SessionTransportTransformerEncrypt(hex(encKey.getString()), hex(authKey), {
+                    // Workaround for Ktor bug: IV length is determined by key length
+                    ByteArray(16).apply {
+                        ivGen.nextBytes(this)
+                    }
+                }))
+            }
         }
     }
 
