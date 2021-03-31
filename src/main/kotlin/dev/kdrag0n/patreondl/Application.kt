@@ -151,7 +151,7 @@ fun Application.module(production: Boolean = false) {
             get("/exclusive/{name}") {
                 val path = call.parameters["name"]
                     ?: return@get call.respondText("Missing", status = HttpStatusCode.BadRequest)
-                println("$exclusiveSrc/$path")
+
                 withContext(Dispatchers.IO) {
                     FileInputStream("$exclusiveSrc/$path").use { fis ->
                         call.respondOutputStream(
