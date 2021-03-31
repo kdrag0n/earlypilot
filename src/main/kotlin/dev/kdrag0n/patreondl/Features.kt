@@ -14,14 +14,6 @@ fun Application.featuresModule(production: Boolean) {
         maxRangeCount = 10
     }
 
-    // Session for storing OAuth access tokens
-    install(Sessions) {
-        cookie<PatronSession>("patronSession") {
-            cookie.extensions["SameSite"] = "Strict"
-            cookie.secure = production
-        }
-    }
-
     // Support HEAD for completeness
     install(AutoHeadResponse)
 

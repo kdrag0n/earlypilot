@@ -19,7 +19,7 @@ fun Application.module(production: Boolean = false) {
     errorsModule()
 
     // Patreon OAuth and session authentication + validation
-    authModule()
+    authModule(production)
 
     // Exclusive content
     exclusiveModule()

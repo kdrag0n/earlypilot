@@ -23,7 +23,7 @@ data class PatronSession(
 ) : Principal
 
 @KtorExperimentalLocationsAPI
-fun Application.authModule() {
+fun Application.authModule(production: Boolean) {
     val patreonProvider = OAuthServerSettings.OAuth2ServerSettings(
         name = "patreon",
         authorizeUrl = PATREON_OAUTH_AUTHORIZE,
@@ -35,6 +35,14 @@ fun Application.authModule() {
 
     val httpClient = HttpClient(Apache)
     val patreonApi = PatreonApi()
+
+    // Session for storing OAuth access tokens
+    install(Sessions) {
+        cookie<PatronSession>("patronSession") {
+            cookie.extensions["SameSite"] = "Strict"
+            cookie.secure = production
+        }
+    }
 
     authentication {
         // This just retrieves OAuth access tokens, session keeps track of it
