@@ -27,4 +27,7 @@ fun Application.featuresModule(production: Boolean) {
             host(host, schemes = schemes)
         }
     }
+
+    // Request logging
+    install(CallLogging)
 }
