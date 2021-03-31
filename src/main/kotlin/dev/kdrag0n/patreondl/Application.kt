@@ -162,10 +162,6 @@ fun Application.module(production: Boolean = false) {
                     }
                 }
             }
-
-            static("exclusive") {
-                files("exclusive_src")
-            }
         }
     }
 }
