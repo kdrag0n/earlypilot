@@ -37,7 +37,6 @@ dependencies {
     implementation("io.ktor:ktor-server-sessions:$ktor_version")
     implementation("io.ktor:ktor-server-netty:$ktor_version")
     implementation("ch.qos.logback:logback-classic:$logback_version")
-    implementation("com.beust:klaxon:5.5")
     implementation("com.patreon:patreon:0.4.2")
     implementation("org.apache.commons:commons-compress:1.20")
 

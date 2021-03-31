@@ -16,6 +16,7 @@ import io.ktor.http.content.*
 import io.ktor.response.*
 import io.ktor.request.*
 import io.ktor.server.netty.*
+import io.ktor.util.pipeline.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.FileInputStream
@@ -62,15 +63,9 @@ fun Application.module(production: Boolean = false) {
     }
 
     install(StatusPages) {
-        status(HttpStatusCode.NotFound) {
-            call.respondText("${it.value} ${it.description}")
-        }
-        status(HttpStatusCode.Unauthorized) {
-            call.respondText("${it.value} ${it.description}")
-        }
-        status(HttpStatusCode.BadRequest) {
-            call.respondText("${it.value} ${it.description}")
-        }
+        status(HttpStatusCode.NotFound) { genericStatusError(it) }
+        status(HttpStatusCode.Unauthorized) { genericStatusError(it) }
+        status(HttpStatusCode.BadRequest) { genericStatusError(it) }
     }
 
     val patreonProvider = OAuthServerSettings.OAuth2ServerSettings(
@@ -83,7 +78,6 @@ fun Application.module(production: Boolean = false) {
     )
 
     val httpClient = HttpClient(Apache)
-    val apiClient = PatreonApi(httpClient)
 
     authentication {
         // This just retrieves OAuth access tokens, session keeps track of it
@@ -99,8 +93,9 @@ fun Application.module(production: Boolean = false) {
 
             val creatorId = environment.config.property("patreon.creatorId").getString()
             val minTierAmount = environment.config.property("patreon.minTierAmount").getString().toInt()
+
             validate { session ->
-                val user = apiClient.getIdentity(session.accessToken)
+                val user = PatreonApi.getIdentity(session.accessToken)
                 val validPledge = user.pledges.find { pledge ->
                     pledge.creator.id == creatorId &&
                             pledge.reward.amountCents >= minTierAmount &&
@@ -115,8 +110,7 @@ fun Application.module(production: Boolean = false) {
     routing {
         // Redirect root to index of benefits on separate static site
         val benefitIndexUrl = environment.config.propertyOrNull("web.benefitIndexUrl")
-            //FIXME
-        if (benefitIndexUrl != null &&false) {
+        if (benefitIndexUrl != null) {
             get("/") {
                 call.respondRedirect(benefitIndexUrl.getString())
             }
@@ -138,7 +132,7 @@ fun Application.module(production: Boolean = false) {
                         return@handle
                     }
 
-                    val user = apiClient.getIdentity(principal.accessToken)
+                    val user = PatreonApi.getIdentity(principal.accessToken)
                     call.sessions.set(PatronSession(user.id, principal.accessToken))
                     call.respondRedirect("../")
                 }
@@ -179,6 +173,10 @@ fun Application.module(production: Boolean = false) {
 suspend fun ApplicationCall.loginError(error: String) {
     application.environment.log.warn("Login failed: $error")
     respondText("Patreon login failed: $error", status = HttpStatusCode.BadRequest)
+}
+
+suspend fun PipelineContext<*, ApplicationCall>.genericStatusError(status: HttpStatusCode) {
+    call.respondText("${status.value} ${status.description}")
 }
 
 @KtorExperimentalLocationsAPI
