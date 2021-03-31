@@ -34,6 +34,7 @@ fun Application.authModule() {
     )
 
     val httpClient = HttpClient(Apache)
+    val patreonApi = PatreonApi()
 
     authentication {
         // This just retrieves OAuth access tokens, session keeps track of it
@@ -51,7 +52,7 @@ fun Application.authModule() {
             val minTierAmount = environment.config.property("patreon.minTierAmount").getString().toInt()
 
             validate { session ->
-                val user = PatreonApi.getIdentity(session.accessToken)
+                val user = patreonApi.getIdentity(session.accessToken)
                 val validPledge = user.pledges.find { pledge ->
                     pledge.creator.id == creatorId &&
                             pledge.reward.amountCents >= minTierAmount &&
@@ -80,7 +81,7 @@ fun Application.authModule() {
                         return@handle
                     }
 
-                    val user = PatreonApi.getIdentity(principal.accessToken)
+                    val user = patreonApi.getIdentity(principal.accessToken)
                     call.sessions.set(PatronSession(user.id, principal.accessToken))
                     call.respondRedirect("../")
                 }

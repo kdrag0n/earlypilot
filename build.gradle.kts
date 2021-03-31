@@ -39,6 +39,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("com.patreon:patreon:0.4.2")
     implementation("org.apache.commons:commons-compress:1.20")
+    implementation("com.google.guava:guava:30.1.1-jre")
 
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
 }
