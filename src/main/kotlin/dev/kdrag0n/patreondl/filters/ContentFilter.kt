@@ -5,7 +5,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 interface ContentFilter {
-    fun writeData(ins: InputStream, os: OutputStream, call: ApplicationCall) {
+    fun writeData(ins: InputStream, os: OutputStream, environment: ApplicationEnvironment, call: ApplicationCall) {
         ins.copyTo(os)
     }
 }

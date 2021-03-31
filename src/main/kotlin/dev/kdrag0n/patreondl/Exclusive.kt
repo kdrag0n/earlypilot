@@ -31,7 +31,7 @@ fun Application.exclusiveModule() {
                             call.respondOutputStream(
                                 contentType = ContentType.defaultForFilePath(name)
                             ) {
-                                contentFilter.writeData(fis, this, call)
+                                contentFilter.writeData(fis, this, environment, call)
                             }
                         }
                     } catch (e: FileNotFoundException) {
