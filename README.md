@@ -2,6 +2,14 @@
 
 This is a server that provides downloads for Patreon benefits. It handles authentication, benefit validation, and content serving out-of-the-box. Additionally, filters can be applied to content as it is being served, which allows watermarking downloads to discourage leaks and/or personalizing downloads for each user.
 
+## Usage
+
+The server can be built with `./gradlew shadowJar`.
+
+A configuration file is required for the server to work properly. Copy `config.example.conf` and edit the values as necessary.
+
+Finally, run the server once you've built and configured it: `java -jar build/libs/patreon-dl-server-0.0.1-all.jar -config=config.conf`
+
 ## Filters
 
 The default content filter implementation is a simple passthrough filter that serves static data from storage with no modification. No watermarking filters are available in the public source code because making them public would defeat the purpose of watermarking, so you will need to create your own filter if you want to track the source of leaks. 
