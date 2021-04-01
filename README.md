@@ -12,7 +12,7 @@ Finally, run the server once you've built and configured it: `java -jar build/li
 
 ## Filters
 
-The default content filter implementation is a simple passthrough filter that serves static data from storage with no modification. No watermarking filters are available in the public source code because making them public would defeat the purpose of watermarking, so you will need to create your own filter if you want to track the source of leaks. 
+The default content filter implementation is a simple pass-through filter that serves static data from storage with no modification. No watermarking filters are available in the public source code because making them public would defeat the purpose of watermarking, so you will need to create your own filter if you want to track the source of leaks. 
 
 The following objects are available to filters:
 
