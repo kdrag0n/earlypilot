@@ -1,5 +1,5 @@
-import org.jetbrains.kotlin.gradle.dsl.Coroutines
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val ktor_version: String by project
 val kotlin_version: String by project
@@ -8,16 +8,14 @@ val logback_version: String by project
 plugins {
     application
     kotlin("jvm") version "1.4.10"
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.4.10"
+    id("com.github.johnrengelman.shadow") version "6.1.0"
 }
 
 group = "dev.kdrag0n"
 version = "0.0.1"
-application {
-    mainClass.set("io.ktor.server.netty.EngineMain")
-}
 
 repositories {
+    mavenCentral()
     mavenLocal()
     jcenter()
     maven { url = uri("https://kotlin.bintray.com/ktor") }
@@ -44,4 +42,11 @@ dependencies {
     }
 
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
+}
+
+val nettyMainClass = "io.ktor.server.netty.EngineMain"
+application {
+    mainClass.set(nettyMainClass)
+    // ShadowJar requires this deprecated property
+    mainClassName = nettyMainClass
 }
