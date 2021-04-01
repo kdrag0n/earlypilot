@@ -28,9 +28,7 @@ fun Application.exclusiveModule() {
                     @Suppress("BlockingMethodInNonBlockingContext")
                     try {
                         FileInputStream("$exclusiveSrc/$name").use { fis ->
-                            call.respondOutputStream(
-                                contentType = ContentType.defaultForFilePath(name)
-                            ) {
+                            call.respondOutputStream(ContentType.defaultForFilePath(name)) {
                                 contentFilter.writeData(fis, this, environment, call)
                             }
                         }
