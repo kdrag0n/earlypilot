@@ -21,6 +21,6 @@ The following objects are available to filters:
 - Ktor request and call
 - Output stream (to return data to the user)
 
-The Apache Commons Compress and Google Guava libraries are also available for use in filters.
+The Apache Commons Compress and Google Guava libraries are available for use in filters, along with the entirety of Ktor.
 
 To make a custom filter, create a class that implements `dev.kdrag0n.patreondl.filters.ContentFilter` and re-compile the server with your class included. The filter can be activated by setting `web.contentFilter` to the fully-qualified class name in the server configuration file. 
