@@ -10,7 +10,6 @@ fun main(args: Array<String>) {
 
 @KtorExperimentalLocationsAPI
 @Suppress("unused") // Referenced in application.conf
-@kotlin.jvm.JvmOverloads
 fun Application.module() {
     // Install Ktor server features
     featuresModule()
