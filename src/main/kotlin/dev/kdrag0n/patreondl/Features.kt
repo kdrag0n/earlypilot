@@ -3,11 +3,14 @@ package dev.kdrag0n.patreondl
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.locations.*
-import io.ktor.sessions.*
 
 fun Application.featuresModule() {
     // Typed routes
     install(Locations)
+
+    if (environment.config.property("web.forwardedHeaders").getString().toBoolean()) {
+        install(XForwardedHeaderSupport)
+    }
 
     // In case users download with a parallel downloader, e.g. aria2
     install(PartialContent) {
