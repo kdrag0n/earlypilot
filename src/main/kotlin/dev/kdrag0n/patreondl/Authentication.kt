@@ -10,6 +10,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
 import io.ktor.util.*
+import java.io.IOException
 import java.security.SecureRandom
 
 private const val PATREON_OAUTH_AUTHORIZE = "https://www.patreon.com/oauth2/authorize"
@@ -85,14 +86,37 @@ fun Application.authModule() {
             val minTierAmount = environment.config.property("patreon.minTierAmount").getString().toInt()
 
             validate { session ->
-                val user = patreonApi.getIdentity(session.accessToken)
+                val user = try {
+                    patreonApi.getIdentity(session.accessToken)
+                } catch (e: Exception) {
+                    // Workaround for lack of multi-catch support
+                    when (e) {
+                        is IOException, is IllegalStateException -> {
+                            // Expired session, request authentication again
+                            return@validate null
+                        }
+                        else -> throw e
+                    }
+                }
+
                 val validPledge = user.pledges.find { pledge ->
                     pledge.creator.id == creatorId &&
                             pledge.reward.amountCents >= minTierAmount &&
                             pledge.declinedSince == null
                 }
 
-                return@validate if (validPledge != null) session else null
+                if (validPledge == null) {
+                    val prettyAmount = "$" + String.format("%.02f", minTierAmount.toFloat() / 100)
+                    respondText(
+                        """
+                            |You must pledge at least $prettyAmount per month for access to exclusive downloads.
+                            |To pledge on Patreon, visit this link: https://patreon.com/user?u=$creatorId
+                        """.trimMargin(),
+                        status = HttpStatusCode.Forbidden
+                    )
+                }
+
+                return@validate session
             }
         }
     }
