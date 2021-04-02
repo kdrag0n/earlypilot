@@ -5,7 +5,7 @@ import io.ktor.features.*
 import io.ktor.locations.*
 import io.ktor.sessions.*
 
-fun Application.featuresModule(production: Boolean) {
+fun Application.featuresModule() {
     // Typed routes
     install(Locations)
 
@@ -22,7 +22,8 @@ fun Application.featuresModule(production: Boolean) {
         // Send cookies for session authentication
         allowCredentials = true
 
-        val schemes = if (production) listOf("https") else listOf("https", "http")
+        val httpsOnly = environment.config.property("web.httpsOnly").getString().toBoolean()
+        val schemes = if (httpsOnly) listOf("https") else listOf("https", "http")
         for (host in environment.config.property("web.corsAllowed").getList()) {
             host(host, schemes = schemes)
         }

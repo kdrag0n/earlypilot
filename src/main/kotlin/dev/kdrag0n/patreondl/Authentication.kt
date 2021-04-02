@@ -25,7 +25,7 @@ data class PatronSession(
 ) : Principal
 
 @KtorExperimentalLocationsAPI
-fun Application.authModule(production: Boolean) {
+fun Application.authModule() {
     val patreonProvider = OAuthServerSettings.OAuth2ServerSettings(
         name = "patreon",
         authorizeUrl = PATREON_OAUTH_AUTHORIZE,
@@ -42,7 +42,7 @@ fun Application.authModule(production: Boolean) {
     install(Sessions) {
         cookie<PatronSession>("patronSession") {
             cookie.extensions["SameSite"] = "Strict"
-            cookie.secure = production
+            cookie.secure = environment.config.property("web.httpsOnly").getString().toBoolean()
 
             val encKey = environment.config.propertyOrNull("web.sessionEncryptKey")
             if (encKey == null) {

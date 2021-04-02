@@ -11,15 +11,15 @@ fun main(args: Array<String>) {
 @KtorExperimentalLocationsAPI
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
-fun Application.module(production: Boolean = false) {
+fun Application.module() {
     // Install Ktor server features
-    featuresModule(production)
+    featuresModule()
 
     // Error handling
     errorsModule()
 
     // Patreon OAuth and session authentication + validation
-    authModule(production)
+    authModule()
 
     // Exclusive content
     exclusiveModule()
