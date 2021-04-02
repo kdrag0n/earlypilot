@@ -114,6 +114,7 @@ fun Application.authModule() {
                         """.trimMargin(),
                         status = HttpStatusCode.Forbidden
                     )
+                    return@validate null
                 }
 
                 return@validate session
