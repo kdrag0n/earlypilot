@@ -66,7 +66,15 @@ fun Application.authModule() {
         oauth("patreonOAuth") {
             client = httpClient
             providerLookup = { patreonProvider }
-            urlProvider = { url(Login()) }
+            urlProvider = {
+                val scheme = if (environment.config.property("web.httpsOnly").getString().toBoolean()) {
+                    "https"
+                } else {
+                    "http"
+                }
+                val host = request.headers["Host"]
+                "$scheme://$host/login"
+            }
         }
 
         // Used for subsequent requests
