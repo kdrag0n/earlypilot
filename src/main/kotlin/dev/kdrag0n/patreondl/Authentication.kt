@@ -99,6 +99,11 @@ fun Application.authModule() {
                     }
                 }
 
+                // Always allow creator
+                if (user.id == creatorId) {
+                    return@validate session
+                }
+
                 val validPledge = user.pledges.find { pledge ->
                     pledge.creator.id == creatorId &&
                             pledge.reward.amountCents >= minTierAmount &&
