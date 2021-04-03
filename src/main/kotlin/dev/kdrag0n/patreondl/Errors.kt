@@ -11,6 +11,11 @@ fun Application.errorsModule() {
         status(HttpStatusCode.NotFound) { genericStatusError(it) }
         status(HttpStatusCode.Unauthorized) { genericStatusError(it) }
         status(HttpStatusCode.BadRequest) { genericStatusError(it) }
+
+        exception<Throwable> { cause ->
+            genericStatusError(HttpStatusCode.InternalServerError)
+            throw cause
+        }
     }
 }
 
