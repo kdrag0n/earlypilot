@@ -20,5 +20,5 @@ fun Application.errorsModule() {
 }
 
 private suspend fun PipelineContext<*, ApplicationCall>.genericStatusError(status: HttpStatusCode) {
-    call.respondText("${status.value} ${status.description}")
+    call.respondText("${status.value} ${status.description}", status = status)
 }
