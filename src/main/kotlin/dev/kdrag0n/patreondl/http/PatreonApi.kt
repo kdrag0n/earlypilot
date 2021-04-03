@@ -10,9 +10,10 @@ import java.time.Duration
 class PatreonApi {
     // Token -> User mapping
     private val identityCache = CacheBuilder.newBuilder().run {
-        maximumSize(500)
+        maximumSize(200)
         // Important: benefits need to be invalidated in a timely manner
-        expireAfterWrite(Duration.ofHours(12))
+        // We also need to give users a chance to fix their pledges
+        expireAfterWrite(Duration.ofHours(2))
         // We can't use a LoadingCache here because of coroutines
         build<String, User>()
     }
