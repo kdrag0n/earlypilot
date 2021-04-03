@@ -1,6 +1,6 @@
 package dev.kdrag0n.patreondl.security
 
-import dev.kdrag0n.patreondl.PatreonApi
+import dev.kdrag0n.patreondl.http.PatreonApi
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.client.*
