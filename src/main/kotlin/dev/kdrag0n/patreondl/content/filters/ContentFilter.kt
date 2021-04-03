@@ -1,4 +1,4 @@
-package dev.kdrag0n.patreondl.filters
+package dev.kdrag0n.patreondl.content.filters
 
 import io.ktor.application.*
 import java.io.InputStream

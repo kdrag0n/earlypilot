@@ -7,5 +7,5 @@ exclusive_src/
 *.conf
 !application.conf
 !config.example.conf
-src/main/kotlin/dev/kdrag0n/patreondl/filters/*.kt
-!src/main/kotlin/dev/kdrag0n/patreondl/filters/ContentFilter.kt
+src/main/kotlin/dev/kdrag0n/patreondl/content/filters/*.kt
+!src/main/kotlin/dev/kdrag0n/patreondl/content/filters/ContentFilter.kt

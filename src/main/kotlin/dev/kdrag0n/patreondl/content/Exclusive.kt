@@ -1,6 +1,6 @@
 package dev.kdrag0n.patreondl
 
-import dev.kdrag0n.patreondl.filters.ContentFilter
+import dev.kdrag0n.patreondl.content.filters.ContentFilter
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.http.*
