@@ -53,7 +53,7 @@ suspend fun ApplicationCall.respondAuthorizationResult(
         )
         AuthorizationResult.PAYMENT_DECLINED -> respondText(
             """
-                You can‘t access benefits because your pledge’s payment was declined.
+                You can‘t access benefits because your payment was declined.
                 Please fix the issue on Patreon and try again after 2 hours.
             """.trimIndent(),
             status = HttpStatusCode.PaymentRequired
