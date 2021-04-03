@@ -1,5 +1,6 @@
 package dev.kdrag0n.patreondl
 
+import dev.kdrag0n.patreondl.security.authModule
 import io.ktor.locations.*
 import io.ktor.application.*
 import io.ktor.server.netty.*
