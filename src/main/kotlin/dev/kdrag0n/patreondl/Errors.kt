@@ -20,5 +20,29 @@ fun Application.errorsModule() {
 }
 
 private suspend fun PipelineContext<*, ApplicationCall>.genericStatusError(status: HttpStatusCode) {
-    call.respondText("${status.value} ${status.description}", status = status)
+    call.respondErrorPage(status, "${status.value} ${status.description}")
+}
+
+suspend fun ApplicationCall.respondErrorPage(status: HttpStatusCode, title: String, description: String = "") {
+    val html = """
+        <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>$title</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+                <style>
+                    body {
+                        font-family: system-ui, Roboto, sans-serif, serif;
+                    }
+                </style>
+            </head>
+
+            <body>
+                <h1>$title</h1>
+                <p>${description.replace("\n", "<br>")}</p>
+            </body>
+        </html>
+    """.trimIndent()
+
+    respondText(html, status = status, contentType = ContentType.Text.Html)
 }

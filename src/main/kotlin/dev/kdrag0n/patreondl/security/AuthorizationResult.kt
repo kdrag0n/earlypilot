@@ -1,5 +1,6 @@
 package dev.kdrag0n.patreondl.security
 
+import dev.kdrag0n.patreondl.respondErrorPage
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.response.*
@@ -30,33 +31,37 @@ suspend fun ApplicationCall.respondAuthorizationResult(
     val minTierAmountPretty = "$" + String.format("%.02f", minTierAmount.toFloat() / 100)
 
     when (attributes[AuthorizationResult.KEY]) {
-        AuthorizationResult.API_ERROR -> respondText(
+        AuthorizationResult.API_ERROR -> respondErrorPage(
+            HttpStatusCode.InternalServerError,
+            "Patreon error",
             """
                 We’re having trouble talking to Patreon. Please try again later.
                 Sorry for the inconvenience!
             """.trimIndent(),
-            status = HttpStatusCode.InternalServerError
         )
-        AuthorizationResult.NO_PLEDGE -> respondText(
+        AuthorizationResult.NO_PLEDGE -> respondErrorPage(
+            HttpStatusCode.PaymentRequired,
+            "No pledge found",
             """
                 You can’t access benefits because you haven’t pledged to $creatorName on Patreon.
-                Pledge at least $minTierAmountPretty per month here: $creatorUrl
-            """.trimIndent(),
-            status = HttpStatusCode.PaymentRequired
+                <a href="$creatorUrl">Pledge at least $minTierAmountPretty per month</a> to get access.
+            """.trimIndent()
         )
-        AuthorizationResult.LOW_TIER -> respondText(
+        AuthorizationResult.LOW_TIER -> respondErrorPage(
+            HttpStatusCode.PaymentRequired,
+            "Tier is too low",
             """
                 You can‘t access benefits because your pledge’s tier is too low.
-                Pledge at least $minTierAmountPretty per month here: $creatorUrl
-            """.trimIndent(),
-            status = HttpStatusCode.PaymentRequired
+                <a href="$creatorUrl">Pledge at least $minTierAmountPretty per month</a> to get access.
+            """.trimIndent()
         )
-        AuthorizationResult.PAYMENT_DECLINED -> respondText(
+        AuthorizationResult.PAYMENT_DECLINED -> respondErrorPage(
+            HttpStatusCode.PaymentRequired,
+            "Payment declined",
             """
                 You can‘t access benefits because your payment was declined.
                 Please fix the issue on Patreon and try again after 2 hours.
-            """.trimIndent(),
-            status = HttpStatusCode.PaymentRequired
+            """.trimIndent()
         )
 
         // All other results should redirect back to login
