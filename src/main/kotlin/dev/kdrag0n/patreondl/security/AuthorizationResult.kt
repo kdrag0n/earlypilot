@@ -30,7 +30,7 @@ suspend fun ApplicationCall.respondAuthorizationResult(
     val creatorUrl = "https://patreon.com/user?u=$creatorId"
     val minTierAmountPretty = "$" + String.format("%.02f", minTierAmount.toFloat() / 100)
 
-    when (attributes[AuthorizationResult.KEY]) {
+    when (attributes.getOrNull(AuthorizationResult.KEY)) {
         AuthorizationResult.API_ERROR -> respondErrorPage(
             HttpStatusCode.InternalServerError,
             "Patreon error",
