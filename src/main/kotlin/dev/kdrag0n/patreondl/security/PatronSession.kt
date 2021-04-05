@@ -21,9 +21,15 @@ data class PatronSession(
             patreonApi.getIdentity(accessToken)
             // Kotlin doesn't support multi-catch
         } catch (e: IOException) {
-            return AuthorizationResult.API_ERROR
+            // 401 Unauthorized = token expired
+            return if (e.message?.contains("HTTP response code: 401 for") == true) {
+                AuthorizationResult.TOKEN_EXPIRED
+            } else {
+                AuthorizationResult.API_ERROR
+            }
         } catch (e: IllegalStateException) {
-            return AuthorizationResult.API_ERROR
+            // null user = unauthorized
+            return AuthorizationResult.TOKEN_EXPIRED
         }
 
         // Each step is separate in order to return a more precise error

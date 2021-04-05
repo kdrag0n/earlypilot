@@ -13,6 +13,7 @@ enum class AuthorizationResult {
     API_ERROR,
 
     // User issues
+    TOKEN_EXPIRED,
     NO_PLEDGE,
     LOW_TIER,
     PAYMENT_DECLINED;
