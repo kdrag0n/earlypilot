@@ -4,7 +4,7 @@ import io.ktor.application.*
 import io.ktor.response.*
 import io.ktor.routing.*
 
-fun Application.staticModule() {
+fun Application.publicModule() {
     routing {
         // Redirect root to index of benefits on separate static site
         val benefitIndexUrl = environment.config.propertyOrNull("web.benefitIndexUrl")

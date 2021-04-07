@@ -7,11 +7,13 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import io.ktor.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 
+@KtorExperimentalAPI
 fun Application.exclusiveModule() {
     routing {
         // Patron-only content (eligibility already verified)
@@ -42,7 +44,7 @@ fun Application.exclusiveModule() {
             val staticSrc = environment.config.propertyOrNull("web.staticSrc")?.getString()
             if (staticSrc != null) {
                 static {
-                    files(staticSrc)
+                    filesWithIndex(staticSrc, "index.html")
                 }
             }
         }

@@ -1,7 +1,7 @@
 package dev.kdrag0n.patreondl
 
 import dev.kdrag0n.patreondl.content.exclusiveModule
-import dev.kdrag0n.patreondl.content.staticModule
+import dev.kdrag0n.patreondl.content.publicModule
 import dev.kdrag0n.patreondl.http.featuresModule
 import dev.kdrag0n.patreondl.security.authModule
 import io.ktor.locations.*
@@ -28,5 +28,5 @@ fun Application.module() {
     exclusiveModule()
 
     // Simple Public/static routes
-    staticModule()
+    publicModule()
 }
