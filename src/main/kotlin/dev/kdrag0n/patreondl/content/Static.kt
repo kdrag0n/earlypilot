@@ -1,4 +1,4 @@
-package dev.kdrag0n.patreondl
+package dev.kdrag0n.patreondl.content
 
 import io.ktor.application.*
 import io.ktor.response.*

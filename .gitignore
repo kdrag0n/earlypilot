@@ -4,6 +4,7 @@
 .gradle
 build/
 exclusive_src/
+static_src/
 *.conf
 !application.conf
 !config.example.conf

@@ -1,9 +1,10 @@
-package dev.kdrag0n.patreondl
+package dev.kdrag0n.patreondl.content
 
 import dev.kdrag0n.patreondl.content.filters.ContentFilter
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +36,13 @@ fun Application.exclusiveModule() {
                     } catch (e: FileNotFoundException) {
                         call.respond(HttpStatusCode.NotFound)
                     }
+                }
+            }
+
+            val staticSrc = environment.config.propertyOrNull("web.staticSrc")?.getString()
+            if (staticSrc != null) {
+                static {
+                    files(staticSrc)
                 }
             }
         }
