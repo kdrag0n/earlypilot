@@ -10,7 +10,7 @@ import io.ktor.routing.*
 import io.ktor.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.FileInputStream
+import java.io.File
 import java.io.FileNotFoundException
 
 @KtorExperimentalAPI
@@ -30,9 +30,12 @@ fun Application.exclusiveModule() {
                     // False-positive caused by IOException
                     @Suppress("BlockingMethodInNonBlockingContext")
                     try {
-                        FileInputStream("$exclusiveSrc/$name").use { fis ->
-                            call.respondOutputStream(ContentType.defaultForFilePath(name)) {
-                                contentFilter.writeData(fis, this, environment, call)
+                        val file = File("$exclusiveSrc/$name")
+                        val len = contentFilter.getFinalLength(environment, call, file.length())
+
+                        file.inputStream().use { fis ->
+                            call.respondOutputStreamWithLength(len, ContentType.defaultForFilePath(name)) {
+                                contentFilter.writeData(environment, call, fis, this)
                             }
                         }
                     } catch (e: FileNotFoundException) {
