@@ -9,6 +9,7 @@ plugins {
     application
     kotlin("jvm") version "1.4.10"
     id("com.github.johnrengelman.shadow") version "6.1.0"
+    kotlin("plugin.serialization") version "1.4.30"
 }
 
 group = "dev.kdrag0n"
@@ -37,6 +38,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("org.apache.commons:commons-compress:1.20")
     implementation("com.google.guava:guava:30.1.1-jre")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
     implementation("com.patreon:patreon:0.4.2") {
         exclude(group = "org.slf4j", module = "slf4j-log4j12")
     }
