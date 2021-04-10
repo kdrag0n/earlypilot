@@ -96,18 +96,18 @@ private fun Route.exclusiveGetRoute(
                     val grantInfo = try {
                         Json.decodeFromString<ExclusiveGrant>(encrypter.decrypt(hex(grantData)).decodeToString())
                     } catch (e: Exception) {
-                        return@get call.respond(HttpStatusCode.Unauthorized)
+                        return@get call.respond(HttpStatusCode.Forbidden)
                     }
 
-                    // Always return unauthorized to avoid leaking info
+                    // Always return forbidden to avoid leaking info
                     if (grantInfo.path != path || grantInfo.timestamp > System.currentTimeMillis()) {
-                        return@get call.respond(HttpStatusCode.Unauthorized)
+                        return@get call.respond(HttpStatusCode.Forbidden)
                     }
 
                     // Valid grant, put attribute and continue serving file
                     call.attributes.put(ExclusiveGrant.KEY, grantInfo)
                 } else {
-                    return@get call.respond(HttpStatusCode.Unauthorized)
+                    return@get call.respond(HttpStatusCode.Forbidden)
                 }
             }
         }
