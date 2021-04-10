@@ -70,10 +70,13 @@ private fun Route.exclusiveGetRoute(
             val grantTag = call.request.queryParameters["grant_tag"]
             val session = call.sessions.get<PatronSession>()
             if (grantTag != null && session != null && session.patreonUserId == creatorId) {
+                // Convert String -> Float -> Long to allow for sub-hour precision in query parameters
+                val durationHours = (call.request.queryParameters["expires"] ?: "48").toFloat()
+                val durationMs = (durationHours * 60 * 60 * 1000).toLong()
                 val grantInfo = ExclusiveGrant(
                     path = path,
                     tag = grantTag,
-                    timestamp = System.currentTimeMillis(),
+                    expireTime = System.currentTimeMillis() + durationMs,
                 )
 
                 // Pad to nearest 16-byte boundary to avoid side-channel attacks
@@ -101,7 +104,7 @@ private fun Route.exclusiveGetRoute(
                     }
 
                     // Always return forbidden to avoid leaking info
-                    if (grantInfo.path != path || grantInfo.timestamp > System.currentTimeMillis()) {
+                    if (grantInfo.path != path || System.currentTimeMillis() > grantInfo.expireTime) {
                         return@get call.respond(HttpStatusCode.Forbidden)
                     }
 
@@ -137,7 +140,7 @@ private fun Route.exclusiveGetRoute(
 data class ExclusiveGrant(
     val path: String,
     val tag: String,
-    val timestamp: Long,
+    val expireTime: Long,
 ) {
     companion object {
         val KEY = AttributeKey<ExclusiveGrant>("exclusive.grant")
