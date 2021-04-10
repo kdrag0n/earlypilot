@@ -91,21 +91,24 @@ private fun Route.exclusiveGetRoute(
 
             // Mode for non-patrons to use a grant
             val grantData = call.request.queryParameters["grant"]
-            if (acceptGrants && grantData != null) {
-                val grantInfo = try {
-                    Json.decodeFromString<ExclusiveGrant>(encrypter.decrypt(hex(grantData)).decodeToString())
-                } catch (e: Exception) {
-                    e.printStackTrace()
+            if (acceptGrants) {
+                if (grantData != null) {
+                    val grantInfo = try {
+                        Json.decodeFromString<ExclusiveGrant>(encrypter.decrypt(hex(grantData)).decodeToString())
+                    } catch (e: Exception) {
+                        return@get call.respond(HttpStatusCode.Unauthorized)
+                    }
+
+                    // Always return unauthorized to avoid leaking info
+                    if (grantInfo.path != path || grantInfo.timestamp > System.currentTimeMillis()) {
+                        return@get call.respond(HttpStatusCode.Unauthorized)
+                    }
+
+                    // Valid grant, put attribute and continue serving file
+                    call.attributes.put(ExclusiveGrant.KEY, grantInfo)
+                } else {
                     return@get call.respond(HttpStatusCode.Unauthorized)
                 }
-
-                // Always return unauthorized to avoid leaking info
-                if (grantInfo.path != path || grantInfo.timestamp > System.currentTimeMillis()) {
-                    return@get call.respond(HttpStatusCode.Unauthorized)
-                }
-
-                // Valid grant, put attribute and continue serving file
-                call.attributes.put(ExclusiveGrant.KEY, grantInfo)
             }
         }
 
