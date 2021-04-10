@@ -18,6 +18,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.apache.commons.codec.binary.Base64
 import java.io.File
 import java.io.FileNotFoundException
 
@@ -79,7 +80,7 @@ private fun Route.exclusiveGetRoute(
                 var grantJson = Json.encodeToString(grantInfo)
                 grantJson += " ".repeat(grantJson.length % 16)
                 // Encrypt padded JSON data
-                val grantData = hex(encrypter.encrypt(grantJson.encodeToByteArray()))
+                val grantData = Base64.encodeBase64String(encrypter.encrypt(grantJson.encodeToByteArray()))
 
                 val url = call.url {
                     encodedPath = "/exclusive-grants/$path"
@@ -94,7 +95,7 @@ private fun Route.exclusiveGetRoute(
             if (acceptGrants) {
                 if (grantData != null) {
                     val grantInfo = try {
-                        Json.decodeFromString<ExclusiveGrant>(encrypter.decrypt(hex(grantData)).decodeToString())
+                        Json.decodeFromString<ExclusiveGrant>(encrypter.decrypt(Base64.decodeBase64(grantData)).decodeToString())
                     } catch (e: Exception) {
                         return@get call.respond(HttpStatusCode.Forbidden)
                     }
