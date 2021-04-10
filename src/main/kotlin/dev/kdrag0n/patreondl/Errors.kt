@@ -8,9 +8,10 @@ import io.ktor.util.pipeline.*
 
 fun Application.errorsModule() {
     install(StatusPages) {
-        status(HttpStatusCode.NotFound) { genericStatusError(it) }
-        status(HttpStatusCode.Unauthorized) { genericStatusError(it) }
         status(HttpStatusCode.BadRequest) { genericStatusError(it) }
+        status(HttpStatusCode.Unauthorized) { genericStatusError(it) }
+        status(HttpStatusCode.Forbidden) { genericStatusError(it) }
+        status(HttpStatusCode.NotFound) { genericStatusError(it) }
 
         exception<Throwable> { cause ->
             genericStatusError(HttpStatusCode.InternalServerError)
