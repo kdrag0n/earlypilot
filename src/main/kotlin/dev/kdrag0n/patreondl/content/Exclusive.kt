@@ -74,7 +74,12 @@ private fun Route.exclusiveGetRoute(
                     tag = grantTag,
                     timestamp = System.currentTimeMillis(),
                 )
-                val grantData = hex(encrypter.encrypt(Json.encodeToString(grantInfo).encodeToByteArray()))
+
+                // Pad to nearest 16-byte boundary to avoid side-channel attacks
+                var grantJson = Json.encodeToString(grantInfo)
+                grantJson += " ".repeat(grantJson.length % 16)
+                // Encrypt padded JSON data
+                val grantData = hex(encrypter.encrypt(grantJson.encodeToByteArray()))
 
                 val url = call.url {
                     encodedPath = "/exclusive-grants/$path"
