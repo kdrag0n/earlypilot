@@ -27,7 +27,7 @@ class AuthenticatedEncrypter(keyData: ByteArray) {
 
         // Encrypt
         val spec = GCMParameterSpec(TAG_BYTES * 8, nonce)
-        val cipher = Cipher.getInstance("AES/GCM/PKCS5Padding")
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, key, spec)
 
         return nonce + cipher.doFinal(data)
@@ -39,7 +39,7 @@ class AuthenticatedEncrypter(keyData: ByteArray) {
 
         // Decrypt
         val spec = GCMParameterSpec(TAG_BYTES * 8, nonce)
-        val cipher = Cipher.getInstance("AES/GCM/PKCS5Padding")
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.DECRYPT_MODE, key, spec)
 
         return cipher.doFinal(data.sliceArray(NONCE_BYTES until data.size))
