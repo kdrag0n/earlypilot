@@ -4,6 +4,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 val ktorVersion: String by project
 val kotlinVersion: String by project
 val logbackVersion: String by project
+val exposedVersion: String by project
 
 plugins {
     application
@@ -27,6 +28,7 @@ tasks.withType<KotlinCompile> {
 }
 
 dependencies {
+    // Ktor
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-auth:$ktorVersion")
     implementation("io.ktor:ktor-locations:$ktorVersion")
@@ -35,13 +37,25 @@ dependencies {
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
     implementation("io.ktor:ktor-server-sessions:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
+
+    // Internal
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("org.apache.commons:commons-compress:1.20")
     implementation("com.google.guava:guava:30.1.1-jre")
+
+    // API
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
     implementation("com.patreon:patreon:0.4.2") {
         exclude(group = "org.slf4j", module = "slf4j-log4j12")
     }
+
+    // Database
+    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
+    implementation("com.zaxxer:HikariCP:4.0.3")
+    implementation("org.postgresql:postgresql:42.2.19")
 
     testImplementation("io.ktor:ktor-server-tests:$ktorVersion")
 }
