@@ -4,6 +4,7 @@ import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.locations.*
+import org.slf4j.event.Level
 
 fun Application.featuresModule() {
     // Typed routes
@@ -54,5 +55,7 @@ fun Application.featuresModule() {
     }
 
     // Request logging
-    install(CallLogging)
+    install(CallLogging) {
+        level = Level.INFO
+    }
 }
