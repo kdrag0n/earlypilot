@@ -2,6 +2,7 @@ package dev.kdrag0n.patreondl
 
 import dev.kdrag0n.patreondl.content.exclusiveModule
 import dev.kdrag0n.patreondl.content.publicModule
+import dev.kdrag0n.patreondl.data.databaseModule
 import dev.kdrag0n.patreondl.http.featuresModule
 import dev.kdrag0n.patreondl.security.authModule
 import io.ktor.locations.*
@@ -21,11 +22,14 @@ fun Application.module() {
     // Error handling
     errorsModule()
 
+    // Database
+    val dbAvailable = databaseModule()
+
     // Patreon OAuth and session authentication + validation
-    authModule()
+    authModule(dbAvailable)
 
     // Exclusive content
-    exclusiveModule()
+    exclusiveModule(dbAvailable)
 
     // Simple Public/static routes
     publicModule()

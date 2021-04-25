@@ -1,6 +1,8 @@
 package dev.kdrag0n.patreondl.content
 
 import dev.kdrag0n.patreondl.content.filters.ContentFilter
+import dev.kdrag0n.patreondl.data.AccessType
+import dev.kdrag0n.patreondl.data.DownloadEvent
 import dev.kdrag0n.patreondl.security.AuthenticatedEncrypter
 import dev.kdrag0n.patreondl.security.PatronSession
 import io.ktor.application.*
@@ -12,6 +14,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
 import io.ktor.util.*
+import io.ktor.util.pipeline.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -19,15 +22,19 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.apache.commons.codec.binary.Base64
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.io.File
 import java.io.FileNotFoundException
+import java.security.DigestOutputStream
+import java.security.MessageDigest
+import java.time.Instant
 
 @KtorExperimentalAPI
-fun Application.exclusiveModule() {
+fun Application.exclusiveModule(dbAvailable: Boolean) {
     routing {
         // Patron-only content (eligibility already verified)
         authenticate("patronSession") {
-            exclusiveGetRoute(environment)
+            exclusiveGetRoute(environment, dbAvailable)
 
             val staticSrc = environment.config.propertyOrNull("web.staticSrc")?.getString()
             if (staticSrc != null) {
@@ -39,12 +46,13 @@ fun Application.exclusiveModule() {
         }
 
         // Grants
-        exclusiveGetRoute(environment, "-grants", acceptGrants = true)
+        exclusiveGetRoute(environment, dbAvailable, "-grants", acceptGrants = true)
     }
 }
 
 private fun Route.exclusiveGetRoute(
     environment: ApplicationEnvironment,
+    dbAvailable: Boolean,
     suffix: String = "",
     acceptGrants: Boolean = false,
 ) {
@@ -117,22 +125,72 @@ private fun Route.exclusiveGetRoute(
         }
 
         // Normal file serving path
-        withContext(Dispatchers.IO) {
-            // False-positive caused by IOException
-            @Suppress("BlockingMethodInNonBlockingContext")
-            try {
-                val file = File("$exclusiveSrc/$path")
-                val len = contentFilter.getFinalLength(environment, call, file.length())
+        serveExclusiveFile(environment, contentFilter, exclusiveSrc, path, dbAvailable)
+    }
+}
 
-                file.inputStream().use { fis ->
-                    call.respondOutputStreamWithLength(len, ContentType.defaultForFilePath(path)) {
-                        contentFilter.writeData(environment, call, fis, this)
-                    }
+private suspend fun PipelineContext<*, ApplicationCall>.serveExclusiveFile(
+    environment: ApplicationEnvironment,
+    contentFilter: ContentFilter,
+    exclusiveSrc: String,
+    path: String,
+    dbAvailable: Boolean,
+) {
+    val startTime = Instant.now()
+    val digest = MessageDigest.getInstance(DownloadEvent.HASH_ALGORITHM)
+
+    withContext(Dispatchers.IO) {
+        // False-positive caused by IOException
+        @Suppress("BlockingMethodInNonBlockingContext")
+        try {
+            val file = File("$exclusiveSrc/$path")
+            val len = contentFilter.getFinalLength(environment, call, file.length())
+
+            file.inputStream().use { fis ->
+                call.respondOutputStreamWithLength(len, ContentType.defaultForFilePath(path)) {
+                    // Hash the output data
+                    val digestOs = DigestOutputStream(this, digest)
+                    contentFilter.writeData(environment, call, fis, digestOs)
                 }
-            } catch (e: FileNotFoundException) {
-                call.respond(HttpStatusCode.NotFound)
+            }
+        } catch (e: FileNotFoundException) {
+            call.respond(HttpStatusCode.NotFound)
+        }
+    }
+
+    // Collect the hash and log a download event
+    if (dbAvailable) {
+        newSuspendedTransaction(Dispatchers.IO) {
+            DownloadEvent.new {
+                val accessInfo = getAccessInfo(environment, call)
+                accessType = accessInfo.first
+                tag = accessInfo.second
+
+                fileName = path
+                fileHash = hex(digest.digest())
+                downloadTime = startTime
+                clientIp = call.request.origin.remoteHost
             }
         }
+    }
+}
+
+fun getAccessInfo(environment: ApplicationEnvironment, call: ApplicationCall): Pair<AccessType, String> {
+    val session = call.sessions.get<PatronSession>()
+
+    val creatorId = environment.config.property("patreon.creatorId").getString()
+    return if (session != null) {
+        if (session.patreonUserId == creatorId && call.request.queryParameters["id"] != null) {
+            AccessType.CREATOR to call.request.queryParameters["id"]!!
+        } else {
+            AccessType.USER to session.patreonUserId
+        }
+    } else {
+        val grant = call.attributes.getOrNull(ExclusiveGrant.KEY)
+            ?: // Should never get here
+            error("Attempting to serve file without valid grant or session")
+
+        AccessType.GRANT to grant.tag
     }
 }
 

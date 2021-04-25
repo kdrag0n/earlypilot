@@ -1,16 +1,19 @@
 package dev.kdrag0n.patreondl.security
 
+import dev.kdrag0n.patreondl.data.User
 import dev.kdrag0n.patreondl.http.PatreonApi
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.client.*
 import io.ktor.client.engine.apache.*
+import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.locations.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
-import io.ktor.util.*
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import java.time.Instant
 
 private const val PATREON_OAUTH_AUTHORIZE = "https://www.patreon.com/oauth2/authorize"
 private const val PATREON_OAUTH_ACCESS_TOKEN = "https://www.patreon.com/api/oauth2/token"
@@ -20,7 +23,7 @@ private const val PATREON_OAUTH_ACCESS_TOKEN = "https://www.patreon.com/api/oaut
 private class Login
 
 @KtorExperimentalLocationsAPI
-fun Application.authModule() {
+fun Application.authModule(dbAvailable: Boolean) {
     // Session for storing OAuth access tokens
     installPatronSessions()
 
@@ -57,6 +60,25 @@ fun Application.authModule() {
             validate { session ->
                 val result = session.authorize(patreonApi, creatorId, minTierAmount)
                 attributes.put(AuthorizationResult.KEY, result)
+
+                // Update info in database
+                if (dbAvailable) {
+                    val dbSuccess = newSuspendedTransaction {
+                        val dbUser = User.findById(session.patreonUserId)
+                            ?: return@newSuspendedTransaction false
+
+                        dbUser.authState = result
+                        dbUser.activityIp = request.origin.remoteHost
+                        dbUser.activityTime = Instant.now()
+
+                        return@newSuspendedTransaction !dbUser.blocked
+                    }
+
+                    if (!dbSuccess) {
+                        return@validate null
+                    }
+                }
+
                 return@validate if (result == AuthorizationResult.SUCCESS) session else null
             }
         }
@@ -80,6 +102,21 @@ fun Application.authModule() {
                     }
 
                     val user = patreonApi.getIdentity(principal.accessToken)
+
+                    // Save user info in database
+                    if (dbAvailable) {
+                        newSuspendedTransaction {
+                            val dbUser = User.findById(user.id) ?: User.new(user.id) { }
+                            dbUser.apply {
+                                name = user.fullName
+                                email = user.email
+                                creationTime = user.created.toInstant()
+                                loginTime = Instant.now()
+                                loginIp = call.request.origin.remoteHost
+                            }
+                        }
+                    }
+
                     call.sessions.set(PatronSession(user.id, principal.accessToken))
                     call.respondRedirect("../")
                 }
