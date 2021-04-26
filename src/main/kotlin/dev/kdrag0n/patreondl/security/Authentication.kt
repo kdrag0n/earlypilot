@@ -110,6 +110,7 @@ fun Application.authModule(dbAvailable: Boolean) {
                             dbUser.apply {
                                 name = user.fullName
                                 email = user.email
+                                accessToken = principal.accessToken
                                 creationTime = user.created.toInstant()
                                 loginTime = Instant.now()
                                 loginIp = call.request.origin.remoteHost

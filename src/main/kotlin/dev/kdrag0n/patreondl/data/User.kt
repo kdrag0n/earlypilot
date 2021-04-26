@@ -14,6 +14,7 @@ object Users : IdTable<String>("users") {
 
     val name = text("name")
     val email = text("email")
+    val accessToken = text("access_token")
     val creationTime = timestamp("creation_time")
     val loginTime = timestamp("login_time").defaultExpression(CurrentTimestamp())
     val loginIp = text("login_ip")
@@ -28,6 +29,7 @@ class User(id: EntityID<String>) : Entity<String>(id) {
 
     var name by Users.name
     var email by Users.email
+    var accessToken by Users.accessToken
     var creationTime by Users.creationTime
     var loginTime by Users.loginTime
     var loginIp by Users.loginIp
