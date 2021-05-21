@@ -3,6 +3,8 @@ package dev.kdrag0n.patreondl
 import dev.kdrag0n.patreondl.content.exclusiveModule
 import dev.kdrag0n.patreondl.content.publicModule
 import dev.kdrag0n.patreondl.data.databaseModule
+import dev.kdrag0n.patreondl.events.webhooksModule
+import dev.kdrag0n.patreondl.http.PatreonApi
 import dev.kdrag0n.patreondl.http.featuresModule
 import dev.kdrag0n.patreondl.security.authModule
 import io.ktor.locations.*
@@ -26,7 +28,11 @@ fun Application.module() {
     val dbAvailable = databaseModule()
 
     // Patreon OAuth and session authentication + validation
-    authModule(dbAvailable)
+    val patreonApi = PatreonApi()
+    authModule(patreonApi, dbAvailable)
+
+    // Patreon API webhooks
+    webhooksModule(patreonApi)
 
     // Exclusive content
     exclusiveModule(dbAvailable)

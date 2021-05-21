@@ -23,7 +23,7 @@ private const val PATREON_OAUTH_ACCESS_TOKEN = "https://www.patreon.com/api/oaut
 private class Login
 
 @KtorExperimentalLocationsAPI
-fun Application.authModule(dbAvailable: Boolean) {
+fun Application.authModule(patreonApi: PatreonApi, dbAvailable: Boolean) {
     // Session for storing OAuth access tokens
     installPatronSessions()
 
@@ -37,7 +37,6 @@ fun Application.authModule(dbAvailable: Boolean) {
     )
 
     val httpClient = HttpClient(Apache)
-    val patreonApi = PatreonApi()
 
     authentication {
         // This just retrieves OAuth access tokens, session keeps track of it

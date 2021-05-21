@@ -18,6 +18,14 @@ class PatreonApi {
         build<String, User>()
     }
 
+    fun invalidateUser(id: String) {
+        identityCache.asMap().forEach { (token, user) ->
+            if (user.id == id) {
+                identityCache.invalidate(token)
+            }
+        }
+    }
+
     suspend fun getIdentity(token: String): User {
         return identityCache.getIfPresent(token) ?: withContext(Dispatchers.IO) {
             // False-positive caused by IOException
