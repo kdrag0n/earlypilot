@@ -139,7 +139,7 @@ private suspend fun PipelineContext<*, ApplicationCall>.serveExclusiveFile(
     val startTime = Instant.now()
     val digest = MessageDigest.getInstance(DownloadEvent.HASH_ALGORITHM)
 
-    withContext(Dispatchers.IO) {
+    val success = withContext(Dispatchers.IO) {
         // False-positive caused by IOException
         @Suppress("BlockingMethodInNonBlockingContext")
         try {
@@ -153,13 +153,16 @@ private suspend fun PipelineContext<*, ApplicationCall>.serveExclusiveFile(
                     contentFilter.writeData(environment, call, fis, digestOs)
                 }
             }
+
+            true
         } catch (e: FileNotFoundException) {
             call.respond(HttpStatusCode.NotFound)
+            false
         }
     }
 
     // Collect the hash and log a download event
-    if (dbAvailable) {
+    if (success && dbAvailable) {
         newSuspendedTransaction(Dispatchers.IO) {
             DownloadEvent.new {
                 val accessInfo = getAccessInfo(environment, call)
