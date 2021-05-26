@@ -62,19 +62,13 @@ fun Application.authModule(patreonApi: PatreonApi, dbAvailable: Boolean) {
 
                 // Update info in database
                 if (dbAvailable) {
-                    val dbSuccess = newSuspendedTransaction {
+                    newSuspendedTransaction {
                         val dbUser = User.findById(session.patreonUserId)
                             ?: return@newSuspendedTransaction false
 
                         dbUser.authState = result
                         dbUser.activityIp = request.origin.remoteHost
                         dbUser.activityTime = Instant.now()
-
-                        return@newSuspendedTransaction !dbUser.blocked
-                    }
-
-                    if (!dbSuccess) {
-                        return@validate null
                     }
                 }
 

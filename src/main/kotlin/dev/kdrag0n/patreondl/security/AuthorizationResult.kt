@@ -16,7 +16,8 @@ enum class AuthorizationResult {
     TOKEN_EXPIRED,
     NO_PLEDGE,
     LOW_TIER,
-    PAYMENT_DECLINED;
+    PAYMENT_DECLINED,
+    BLOCKED;
 
     companion object {
         val KEY = AttributeKey<AuthorizationResult>("authorization.result")
@@ -62,6 +63,14 @@ suspend fun ApplicationCall.respondAuthorizationResult(
             """
                 You can‘t access benefits because your payment was declined.
                 Please fix the issue on Patreon and try again after 2 hours.
+            """.trimIndent()
+        )
+        AuthorizationResult.BLOCKED -> respondErrorPage(
+            HttpStatusCode.PaymentRequired,
+            "Blocked",
+            """
+                You have been blocked from accessing download benefits.
+                Please reach out to <a href="$creatorUrl">$creatorName</a> in order to resolve this issue. 
             """.trimIndent()
         )
 
