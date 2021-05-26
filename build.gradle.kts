@@ -1,5 +1,4 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 val ktorVersion: String by project
 val kotlinVersion: String by project
@@ -8,9 +7,9 @@ val exposedVersion: String by project
 
 plugins {
     application
-    kotlin("jvm") version "1.4.32"
+    kotlin("jvm") version "1.5.0"
     id("com.github.johnrengelman.shadow") version "6.1.0"
-    kotlin("plugin.serialization") version "1.4.30"
+    kotlin("plugin.serialization") version "1.5.0"
 }
 
 group = "dev.kdrag0n"
@@ -43,9 +42,10 @@ dependencies {
     implementation("org.apache.commons:commons-compress:1.20")
     implementation("com.google.guava:guava:30.1.1-jre")
 
-    // API
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
+    // APIs
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
     implementation("com.patreon:patreon:0.4.2") {
+        // Exclude duplicate SLF4J implementation
         exclude(group = "org.slf4j", module = "slf4j-log4j12")
     }
 
