@@ -18,8 +18,7 @@ fun Application.webhooksModule(patreonApi: PatreonApi) {
     }
 
     val fromName = environment.config.property("patreon.creatorName").getString()
-    val emailEnabled = environment.config.propertyOrNull("email.enabled")?.getString()?.toBoolean() ?: false
-    val mailer = if (emailEnabled) {
+    val mailer = if (environment.config.property("email.enabled").getString().toBoolean()) {
         Mailer(
             apiKey = environment.config.property("email.apiKey").getString(),
             fromAddress = environment.config.property("email.fromAddress").getString(),
@@ -29,8 +28,7 @@ fun Application.webhooksModule(patreonApi: PatreonApi) {
         null
     }
 
-    val telegramEnabled = environment.config.propertyOrNull("telegram.enabled")?.getString()?.toBoolean() ?: false
-    val telegramBot = if (telegramEnabled) {
+    val telegramBot = if (environment.config.property("telegram.enabled").getString().toBoolean()) {
         TelegramBot(
             token = environment.config.property("telegram.botToken").getString(),
             groupId = environment.config.property("telegram.groupId").getString().toLong(),
