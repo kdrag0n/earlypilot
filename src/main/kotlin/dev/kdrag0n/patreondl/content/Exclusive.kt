@@ -4,6 +4,7 @@ import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.content.filters.ContentFilter
 import dev.kdrag0n.patreondl.data.AccessType
 import dev.kdrag0n.patreondl.data.DownloadEvent
+import dev.kdrag0n.patreondl.data.Grant
 import dev.kdrag0n.patreondl.security.AuthenticatedEncrypter
 import dev.kdrag0n.patreondl.security.GrantInfo
 import dev.kdrag0n.patreondl.security.PatronSession
@@ -125,7 +126,7 @@ fun getAccessInfo(config: Config, call: ApplicationCall): Pair<AccessType, Strin
             AccessType.USER to session.patreonUserId
         }
     } else {
-        val grant = call.principal<GrantInfo>()
+        val grant = call.principal<Grant>()
             // Should never get here
             ?: error("Attempting to serve file without valid grant or session")
 

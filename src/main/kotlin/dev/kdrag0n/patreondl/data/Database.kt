@@ -20,6 +20,10 @@ fun Application.initDatabase() {
     Database.connect(HikariDataSource(hikariConfig))
 
     transaction {
-        SchemaUtils.create(Users, DownloadEvents)
+        SchemaUtils.create(
+            Users,
+            DownloadEvents,
+            Grants,
+        )
     }
 }
