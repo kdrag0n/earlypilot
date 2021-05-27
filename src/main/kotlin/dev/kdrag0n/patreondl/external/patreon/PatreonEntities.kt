@@ -23,6 +23,9 @@ class PatreonUser(
 
         @SerialName("first_name")
         val firstName: String,
+
+        @SerialName("full_name")
+        val fullName: String,
     )
 }
 

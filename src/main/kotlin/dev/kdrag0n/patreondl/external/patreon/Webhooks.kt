@@ -58,6 +58,7 @@ fun Application.webhooksModule(patreonApi: PatreonApi) {
                     mailer?.sendWelcomeTelegramInvite(
                         user.attributes.email,
                         user.attributes.firstName,
+                        user.attributes.fullName,
                         benefitIndexUrl,
                         telegramBot?.generateInvite() ?: "",
                     )

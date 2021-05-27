@@ -41,17 +41,18 @@ class Mailer(
     }
 
     suspend fun sendWelcomeTelegramInvite(
-        toAddress: String,
-        toName: String,
+        address: String,
+        firstName: String,
+        fullName: String,
         benefitIndexUrl: String,
         telegramInvite: String,
     ) {
         sendEmail(
-            toAddress,
-            toName,
-            "Welcome, $toName!",
+            address,
+            fullName,
+            "Welcome, $firstName!",
             """
-                Hey $toName,
+                Hey $firstName,
                 
                 Thank you for supporting me and my work! I really appreciate it. People like you help me keep working on Android projects for everyone to enjoy.
                 
