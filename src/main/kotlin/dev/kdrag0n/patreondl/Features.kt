@@ -26,6 +26,7 @@ fun Application.featuresModule() {
 
         val mainModule = module {
             // Core
+            single { environment }
             single { Config.fromFile(environment.config.property("app.configPath").getString()) }
 
             // Third-party
@@ -39,9 +40,7 @@ fun Application.featuresModule() {
 
             // Logic
             single { TelegramInviteManager(get(), get(), get()) }
-            single { Class.forName((get() as Config).content.exclusiveFilter)
-                .getDeclaredConstructor()
-                .newInstance() as ContentFilter }
+            single { ContentFilter.createByName(get(), get(), (get() as Config).content.exclusiveFilter) }
         }
 
         modules(mainModule)

@@ -131,13 +131,13 @@ private suspend fun PipelineContext<*, ApplicationCall>.serveExclusiveFile(
         @Suppress("BlockingMethodInNonBlockingContext")
         try {
             val file = File("$exclusiveSrc/$path")
-            val len = contentFilter.getFinalLength(environment, call, file.length())
+            val len = contentFilter.getFinalLength(call, file.length())
 
             file.inputStream().use { fis ->
                 call.respondOutputStreamWithLength(len, ContentType.defaultForFilePath(path)) {
                     // Hash the output data
                     val digestOs = DigestOutputStream(this, digest)
-                    contentFilter.writeData(environment, call, fis, digestOs)
+                    contentFilter.writeData(call, fis, digestOs)
                 }
             }
 
