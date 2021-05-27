@@ -4,6 +4,7 @@ val ktorVersion: String by project
 val kotlinVersion: String by project
 val logbackVersion: String by project
 val exposedVersion: String by project
+val tgbotVersion: String by project
 
 plugins {
     application
@@ -48,6 +49,12 @@ dependencies {
         // Exclude duplicate SLF4J implementation
         exclude(group = "org.slf4j", module = "slf4j-log4j12")
     }
+    implementation("com.sendgrid:sendgrid-java:4.7.2") {
+        // Newer version of Apache HTTP client breaks Patreon API library
+        exclude(group = "org.apache.httpcomponents")
+    }
+    implementation("dev.inmo:tgbotapi:$tgbotVersion")
+    implementation("dev.inmo:tgbotapi.extensions.api:$tgbotVersion")
 
     // Database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")

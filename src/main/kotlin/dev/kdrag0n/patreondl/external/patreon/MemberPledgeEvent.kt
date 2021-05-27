@@ -1,10 +1,11 @@
-package dev.kdrag0n.patreondl.events
+package dev.kdrag0n.patreondl.external.patreon
 
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class MemberPledgeEvent(
     val data: Data,
+    val included: List<PatreonEntity>
 ) {
     @Serializable
     data class Data(
