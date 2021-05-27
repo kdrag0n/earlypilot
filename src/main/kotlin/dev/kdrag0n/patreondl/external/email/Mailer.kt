@@ -6,16 +6,15 @@ import com.sendgrid.SendGrid
 import com.sendgrid.helpers.mail.Mail
 import com.sendgrid.helpers.mail.objects.Content
 import com.sendgrid.helpers.mail.objects.Email
+import dev.kdrag0n.patreondl.config.Config
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class Mailer(
-    apiKey: String,
-    fromAddress: String,
-    private val fromName: String,
+    config: Config,
 ) {
-    private val client = SendGrid(apiKey)
-    private val fromEmail = Email(fromAddress, fromName)
+    private val client = SendGrid(config.external.email.apiKey)
+    private val fromEmail = Email(config.external.email.fromAddress, config.external.patreon.creatorName)
 
     suspend fun sendEmail(toAddress: String, toName: String?, subject: String, bodyText: String) {
         val toEmail = Email(toAddress, toName)

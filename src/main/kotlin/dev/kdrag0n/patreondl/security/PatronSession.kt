@@ -1,5 +1,6 @@
 package dev.kdrag0n.patreondl.security
 
+import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.data.User
 import dev.kdrag0n.patreondl.http.PatreonApi
 import io.ktor.application.*
@@ -8,6 +9,7 @@ import io.ktor.features.*
 import io.ktor.sessions.*
 import io.ktor.util.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.koin.ktor.ext.inject
 import java.io.IOException
 import java.security.SecureRandom
 import java.time.Instant
@@ -64,25 +66,27 @@ data class PatronSession(
 }
 
 fun Application.installPatronSessions() {
+    val config: Config by inject()
+
     install(Sessions) {
         cookie<PatronSession>("patronSession") {
             cookie.extensions["SameSite"] = "Strict"
-            cookie.secure = environment.config.property("web.httpsOnly").getString().toBoolean()
+            cookie.secure = config.web.httpsOnly
 
-            val encKey = environment.config.propertyOrNull("web.sessionEncryptKey")
-            if (encKey == null) {
-                environment.log.warn("No session encryption key; cookie will not be encrypted or authenticated")
-            } else {
-                val authKey = environment.config.property("web.sessionAuthKey").getString()
-                val ivGen = SecureRandom.getInstanceStrong()
+            val ivGen = SecureRandom.getInstanceStrong()
 
-                transform(SessionTransportTransformerEncrypt(hex(encKey.getString()), hex(authKey), {
-                    // Workaround for Ktor bug: IV length is determined by key length
-                    ByteArray(16).apply {
-                        ivGen.nextBytes(this)
-                    }
-                }))
-            }
+            transform(
+                SessionTransportTransformerEncrypt(
+                    encryptionKey = hex(config.web.sessionEncryptKey),
+                    signKey = hex(config.web.sessionAuthKey),
+                    ivGenerator = {
+                        // Workaround for Ktor bug: IV length is determined by key length
+                        ByteArray(16).apply {
+                            ivGen.nextBytes(this)
+                        }
+                    },
+                )
+            )
         }
     }
 }

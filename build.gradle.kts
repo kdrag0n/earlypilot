@@ -2,8 +2,12 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val ktorVersion: String by project
 val kotlinVersion: String by project
+val koinVersion: String by project
+
+val hopliteVersion: String by project
 val logbackVersion: String by project
 val exposedVersion: String by project
+
 val tgbotVersion: String by project
 
 plugins {
@@ -43,7 +47,17 @@ dependencies {
     implementation("org.apache.commons:commons-compress:1.20")
     implementation("com.google.guava:guava:30.1.1-jre")
 
-    // APIs
+    // Architecture
+    implementation("io.insert-koin:koin-core:$koinVersion")
+    implementation("io.insert-koin:koin-core-ext:$koinVersion")
+    implementation("io.insert-koin:koin-ktor:$koinVersion")
+    implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
+
+    // Config
+    implementation("com.sksamuel.hoplite:hoplite-core:$hopliteVersion")
+    implementation("com.sksamuel.hoplite:hoplite-hocon:$hopliteVersion")
+
+    // API
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
     implementation("com.patreon:patreon:0.4.2") {
         // Exclude duplicate SLF4J implementation

@@ -1,5 +1,6 @@
 package dev.kdrag0n.patreondl.security
 
+import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.data.User
 import dev.kdrag0n.patreondl.http.PatreonApi
 import io.ktor.application.*
@@ -13,6 +14,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.koin.ktor.ext.inject
 import java.time.Instant
 
 private const val PATREON_OAUTH_AUTHORIZE = "https://www.patreon.com/oauth2/authorize"
@@ -23,7 +25,11 @@ private const val PATREON_OAUTH_ACCESS_TOKEN = "https://www.patreon.com/api/oaut
 private class Login
 
 @KtorExperimentalLocationsAPI
-fun Application.authModule(patreonApi: PatreonApi, dbAvailable: Boolean) {
+fun Application.authModule() {
+    val config: Config by inject()
+    val patreonApi: PatreonApi by inject()
+    val httpClient: HttpClient by inject()
+
     // Session for storing OAuth access tokens
     installPatronSessions()
 
@@ -31,12 +37,10 @@ fun Application.authModule(patreonApi: PatreonApi, dbAvailable: Boolean) {
         name = "patreon",
         authorizeUrl = PATREON_OAUTH_AUTHORIZE,
         accessTokenUrl = PATREON_OAUTH_ACCESS_TOKEN,
-        clientId = environment.config.property("patreon.clientId").getString(),
-        clientSecret = environment.config.property("patreon.clientSecret").getString(),
+        clientId = config.external.patreon.clientId,
+        clientSecret = config.external.patreon.clientSecret,
         requestMethod = HttpMethod.Post,
     )
-
-    val httpClient = HttpClient(Apache)
 
     authentication {
         // This just retrieves OAuth access tokens, session keeps track of it
@@ -48,28 +52,30 @@ fun Application.authModule(patreonApi: PatreonApi, dbAvailable: Boolean) {
 
         // Used for subsequent requests
         session<PatronSession>("patronSession") {
-            val creatorName = environment.config.property("patreon.creatorName").getString()
-            val creatorId = environment.config.property("patreon.creatorId").getString()
-            val minTierAmount = environment.config.property("patreon.minTierAmount").getString().toInt()
-
             challenge {
-                call.respondAuthorizationResult(creatorName, creatorId, minTierAmount)
+                call.respondAuthorizationResult(
+                    config.external.patreon.creatorName,
+                    config.external.patreon.creatorId,
+                    config.external.patreon.minTierAmount,
+                )
             }
 
             validate { session ->
-                val result = session.authorize(patreonApi, creatorId, minTierAmount)
+                val result = session.authorize(
+                    patreonApi,
+                    config.external.patreon.creatorId,
+                    config.external.patreon.minTierAmount,
+                )
                 attributes.put(AuthorizationResult.KEY, result)
 
                 // Update info in database
-                if (dbAvailable) {
-                    newSuspendedTransaction {
-                        val dbUser = User.findById(session.patreonUserId)
-                            ?: return@newSuspendedTransaction false
+                newSuspendedTransaction {
+                    val dbUser = User.findById(session.patreonUserId)
+                        ?: return@newSuspendedTransaction false
 
-                        dbUser.authState = result
-                        dbUser.activityIp = request.origin.remoteHost
-                        dbUser.activityTime = Instant.now()
-                    }
+                    dbUser.authState = result
+                    dbUser.activityIp = request.origin.remoteHost
+                    dbUser.activityTime = Instant.now()
                 }
 
                 return@validate if (result == AuthorizationResult.SUCCESS) session else null
@@ -97,17 +103,15 @@ fun Application.authModule(patreonApi: PatreonApi, dbAvailable: Boolean) {
                     val user = patreonApi.getIdentity(principal.accessToken)
 
                     // Save user info in database
-                    if (dbAvailable) {
-                        newSuspendedTransaction {
-                            val dbUser = User.findById(user.id) ?: User.new(user.id) { }
-                            dbUser.apply {
-                                name = user.fullName
-                                email = user.email
-                                accessToken = principal.accessToken
-                                creationTime = user.created.toInstant()
-                                loginTime = Instant.now()
-                                loginIp = call.request.origin.remoteHost
-                            }
+                    newSuspendedTransaction {
+                        val dbUser = User.findById(user.id) ?: User.new(user.id) { }
+                        dbUser.apply {
+                            name = user.fullName
+                            email = user.email
+                            accessToken = principal.accessToken
+                            creationTime = user.created.toInstant()
+                            loginTime = Instant.now()
+                            loginIp = call.request.origin.remoteHost
                         }
                     }
 

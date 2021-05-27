@@ -1,5 +1,6 @@
 package dev.kdrag0n.patreondl.content
 
+import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.content.filters.ContentFilter
 import dev.kdrag0n.patreondl.data.AccessType
 import dev.kdrag0n.patreondl.data.DownloadEvent
@@ -23,6 +24,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.apache.commons.codec.binary.Base64
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.koin.ktor.ext.inject
 import java.io.File
 import java.io.FileNotFoundException
 import java.security.DigestOutputStream
@@ -30,111 +32,96 @@ import java.security.MessageDigest
 import java.time.Instant
 
 @KtorExperimentalAPI
-fun Application.exclusiveModule(dbAvailable: Boolean) {
+fun Application.exclusiveModule() {
+    val config: Config by inject()
+
     routing {
         // Patron-only content (eligibility already verified)
         authenticate("patronSession") {
-            exclusiveGetRoute(environment, dbAvailable)
+            exclusiveGetRoute(config, environment)
 
-            val staticSrc = environment.config.propertyOrNull("web.staticSrc")?.getString()
-            if (staticSrc != null) {
-                static {
-                    filesWithIndex(staticSrc, "index.html")
-                }
+            static {
+                filesWithIndex(config.content.staticSrc, "index.html")
             }
-
         }
 
         // Grants
-        exclusiveGetRoute(environment, dbAvailable, "-grants", acceptGrants = true)
+        exclusiveGetRoute(config, environment, "-grants", acceptGrants = true)
     }
 }
 
 private fun Route.exclusiveGetRoute(
+    config: Config,
     environment: ApplicationEnvironment,
-    dbAvailable: Boolean,
     suffix: String = "",
     acceptGrants: Boolean = false,
 ) {
-    val exclusiveSrc = environment.config.property("web.exclusiveSrc").getString()
-    val contentFilter = Class.forName(environment.config.property("web.contentFilter").getString())
-        .getDeclaredConstructor()
-        .newInstance() as ContentFilter
-
-    // Grants
-    val creatorId = environment.config.property("patreon.creatorId").getString()
-    val rawGrantKey = environment.config.propertyOrNull("web.grantKey")?.getString()
-    // Lazy in case rawGrantKey is null
-    val encrypter by lazy(mode = LazyThreadSafetyMode.NONE) {
-        AuthenticatedEncrypter(hex(rawGrantKey!!))
-    }
+    val contentFilter: ContentFilter by inject()
+    val encrypter = AuthenticatedEncrypter(hex(config.web.grantKey))
 
     get("/exclusive$suffix/{path}") {
         val path = call.parameters["path"]!!
 
-        // Grants
-        if (rawGrantKey != null) {
-            // Mode for creator to generate grants for non-patrons
-            val grantTag = call.request.queryParameters["grant_tag"]
-            val session = call.sessions.get<PatronSession>()
-            if (grantTag != null && session != null && session.patreonUserId == creatorId) {
-                // Convert String -> Float -> Long to allow for sub-hour precision in query parameters
-                val durationHours = (call.request.queryParameters["expires"] ?: "48").toFloat()
-                val durationMs = (durationHours * 60 * 60 * 1000).toLong()
-                val grantInfo = ExclusiveGrant(
-                    path = path,
-                    tag = grantTag,
-                    expireTime = System.currentTimeMillis() + durationMs,
-                )
+        // Mode for creator to generate grants for non-patrons
+        val grantTag = call.request.queryParameters["grant_tag"]
+        val session = call.sessions.get<PatronSession>()
+        if (grantTag != null && session != null && session.patreonUserId == config.external.patreon.creatorId) {
+            // Convert String -> Float -> Long to allow for sub-hour precision in query parameters
+            val durationHours = (call.request.queryParameters["expires"] ?: "48").toFloat()
+            val durationMs = (durationHours * 60 * 60 * 1000).toLong()
+            val grantInfo = ExclusiveGrant(
+                path = path,
+                tag = grantTag,
+                expireTime = System.currentTimeMillis() + durationMs,
+            )
 
-                // Pad to nearest 16-byte boundary to avoid side-channel attacks
-                var grantJson = Json.encodeToString(grantInfo)
-                grantJson += " ".repeat(grantJson.length % 16)
-                // Encrypt padded JSON data
-                val grantData = Base64.encodeBase64String(encrypter.encrypt(grantJson.encodeToByteArray()))
+            // Pad to nearest 16-byte boundary to avoid side-channel attacks
+            var grantJson = Json.encodeToString(grantInfo)
+            grantJson += " ".repeat(grantJson.length % 16)
+            // Encrypt padded JSON data
+            val grantData = Base64.encodeBase64String(encrypter.encrypt(grantJson.encodeToByteArray()))
 
-                val url = call.url {
-                    encodedPath = "/exclusive-grants/$path"
-                    parameters.clear()
-                    parameters["grant"] = grantData
-                }
-                return@get call.respondText(url)
+            val url = call.url {
+                encodedPath = "/exclusive-grants/$path"
+                parameters.clear()
+                parameters["grant"] = grantData
             }
+            return@get call.respondText(url)
+        }
 
-            // Mode for non-patrons to use a grant
-            val grantData = call.request.queryParameters["grant"]
-            if (acceptGrants) {
-                if (grantData != null) {
-                    val grantInfo = try {
-                        Json.decodeFromString<ExclusiveGrant>(encrypter.decrypt(Base64.decodeBase64(grantData)).decodeToString())
-                    } catch (e: Exception) {
-                        return@get call.respond(HttpStatusCode.Forbidden)
-                    }
-
-                    // Always return forbidden to avoid leaking info
-                    if (grantInfo.path != path || System.currentTimeMillis() > grantInfo.expireTime) {
-                        return@get call.respond(HttpStatusCode.Forbidden)
-                    }
-
-                    // Valid grant, put attribute and continue serving file
-                    call.attributes.put(ExclusiveGrant.KEY, grantInfo)
-                } else {
+        // Mode for non-patrons to use a grant
+        val grantData = call.request.queryParameters["grant"]
+        if (acceptGrants) {
+            if (grantData != null) {
+                val grantInfo = try {
+                    Json.decodeFromString<ExclusiveGrant>(encrypter.decrypt(Base64.decodeBase64(grantData)).decodeToString())
+                } catch (e: Exception) {
                     return@get call.respond(HttpStatusCode.Forbidden)
                 }
+
+                // Always return forbidden to avoid leaking info
+                if (grantInfo.path != path || System.currentTimeMillis() > grantInfo.expireTime) {
+                    return@get call.respond(HttpStatusCode.Forbidden)
+                }
+
+                // Valid grant, put attribute and continue serving file
+                call.attributes.put(ExclusiveGrant.KEY, grantInfo)
+            } else {
+                return@get call.respond(HttpStatusCode.Forbidden)
             }
         }
 
         // Normal file serving path
-        serveExclusiveFile(environment, contentFilter, exclusiveSrc, path, dbAvailable)
+        serveExclusiveFile(environment, config, contentFilter, config.content.exclusiveSrc, path)
     }
 }
 
 private suspend fun PipelineContext<*, ApplicationCall>.serveExclusiveFile(
     environment: ApplicationEnvironment,
+    config: Config,
     contentFilter: ContentFilter,
     exclusiveSrc: String,
     path: String,
-    dbAvailable: Boolean,
 ) {
     val startTime = Instant.now()
     val digest = MessageDigest.getInstance(DownloadEvent.HASH_ALGORITHM)
@@ -162,10 +149,10 @@ private suspend fun PipelineContext<*, ApplicationCall>.serveExclusiveFile(
     }
 
     // Collect the hash and log a download event
-    if (success && dbAvailable) {
+    if (success) {
         newSuspendedTransaction(Dispatchers.IO) {
             DownloadEvent.new {
-                val accessInfo = getAccessInfo(environment, call)
+                val accessInfo = getAccessInfo(config, call)
                 accessType = accessInfo.first
                 tag = accessInfo.second
 
@@ -178,20 +165,19 @@ private suspend fun PipelineContext<*, ApplicationCall>.serveExclusiveFile(
     }
 }
 
-fun getAccessInfo(environment: ApplicationEnvironment, call: ApplicationCall): Pair<AccessType, String> {
+fun getAccessInfo(config: Config, call: ApplicationCall): Pair<AccessType, String> {
     val session = call.sessions.get<PatronSession>()
 
-    val creatorId = environment.config.property("patreon.creatorId").getString()
     return if (session != null) {
-        if (session.patreonUserId == creatorId && call.request.queryParameters["id"] != null) {
+        if (session.patreonUserId == config.external.patreon.creatorId && call.request.queryParameters["id"] != null) {
             AccessType.CREATOR to call.request.queryParameters["id"]!!
         } else {
             AccessType.USER to session.patreonUserId
         }
     } else {
         val grant = call.attributes.getOrNull(ExclusiveGrant.KEY)
-            ?: // Should never get here
-            error("Attempting to serve file without valid grant or session")
+            // Should never get here
+            ?: error("Attempting to serve file without valid grant or session")
 
         AccessType.GRANT to grant.tag
     }

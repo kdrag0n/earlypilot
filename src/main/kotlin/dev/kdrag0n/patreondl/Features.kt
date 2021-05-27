@@ -1,17 +1,58 @@
-package dev.kdrag0n.patreondl.http
+package dev.kdrag0n.patreondl
 
+import dev.kdrag0n.patreondl.config.Config
+import dev.kdrag0n.patreondl.content.filters.ContentFilter
+import dev.kdrag0n.patreondl.external.email.Mailer
+import dev.kdrag0n.patreondl.external.telegram.TelegramBot
+import dev.kdrag0n.patreondl.external.telegram.TelegramInviteManager
+import dev.kdrag0n.patreondl.http.PatreonApi
 import io.ktor.application.*
+import io.ktor.client.*
+import io.ktor.client.engine.apache.*
 import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.locations.*
+import kotlinx.serialization.json.Json
+import org.koin.dsl.module
+import org.koin.ktor.ext.Koin
+import org.koin.ktor.ext.inject
+import org.koin.logger.slf4jLogger
 import org.slf4j.event.Level
 
 fun Application.featuresModule() {
+    // Dependency injection
+    install(Koin) {
+        slf4jLogger()
+
+        val mainModule = module {
+            // Core
+            single { Config.fromFile(environment.config.property("app.configPath").getString()) }
+
+            // Third-party
+            single { HttpClient(Apache) }
+            single { Json { ignoreUnknownKeys = true } }
+
+            // API clients
+            single { PatreonApi() }
+            single { Mailer(get()) }
+            single { TelegramBot(get()) }
+
+            // Logic
+            single { TelegramInviteManager(get(), get(), get()) }
+            single { Class.forName((get() as Config).content.exclusiveFilter)
+                .getDeclaredConstructor()
+                .newInstance() as ContentFilter }
+        }
+
+        modules(mainModule)
+    }
+    val config: Config by inject()
+
     // Typed routes
     install(Locations)
 
     // Reverse proxy support (X-Forwarded-*)
-    if (environment.config.property("web.forwardedHeaders").getString().toBoolean()) {
+    if (config.web.forwardedHeaders) {
         install(XForwardedHeaderSupport) {
             // Any unused header is a security issue.
             // TODO: file Ktor issue to avoid using reflection
@@ -47,9 +88,8 @@ fun Application.featuresModule() {
         // Send cookies for session authentication
         allowCredentials = true
 
-        val httpsOnly = environment.config.property("web.httpsOnly").getString().toBoolean()
-        val schemes = if (httpsOnly) listOf("https") else listOf("https", "http")
-        for (host in environment.config.property("web.corsAllowed").getList()) {
+        val schemes = if (config.web.httpsOnly) listOf("https") else listOf("https", "http")
+        for (host in config.web.corsAllowed) {
             host(host, schemes = schemes)
         }
     }
