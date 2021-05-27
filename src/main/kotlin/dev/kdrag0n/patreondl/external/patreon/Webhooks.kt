@@ -1,6 +1,7 @@
 package dev.kdrag0n.patreondl.external.patreon
 
 import dev.kdrag0n.patreondl.external.email.Mailer
+import dev.kdrag0n.patreondl.external.telegram.TelegramInviteMailer
 import dev.kdrag0n.patreondl.external.telegram.TelegramBot
 import dev.kdrag0n.patreondl.http.PatreonApi
 import io.ktor.application.*
@@ -16,12 +17,13 @@ fun Application.webhooksModule(patreonApi: PatreonApi) {
         ignoreUnknownKeys = true
     }
 
+    val fromName = environment.config.property("patreon.creatorName").getString()
     val emailEnabled = environment.config.propertyOrNull("email.enabled")?.getString()?.toBoolean() ?: false
     val mailer = if (emailEnabled) {
         Mailer(
             apiKey = environment.config.property("email.apiKey").getString(),
             fromAddress = environment.config.property("email.fromAddress").getString(),
-            fromName = environment.config.property("patreon.creatorName").getString(),
+            fromName = fromName,
         )
     } else {
         null
@@ -37,7 +39,16 @@ fun Application.webhooksModule(patreonApi: PatreonApi) {
         null
     }
 
-    val benefitIndexUrl = environment.config.property("web.benefitIndexUrl").getString()
+    val inviteMailer =  if (mailer != null && telegramBot != null) {
+        TelegramInviteMailer(
+            mailer = mailer,
+            messageTemplate = environment.config.property("email.messageTemplates.telegramWelcome").getString(),
+            benefitIndexUrl = environment.config.property("web.benefitIndexUrl").getString(),
+            fromName = fromName,
+        )
+    } else {
+        null
+    }
 
     routing {
         val webhookKey = environment.config.propertyOrNull("web.webhookKey")?.getString()
@@ -55,11 +66,10 @@ fun Application.webhooksModule(patreonApi: PatreonApi) {
                         .find { it is PatreonUser && it.attributes.isEmailVerified } as PatreonUser
 
                     // Send Telegram invite
-                    mailer?.sendWelcomeTelegramInvite(
+                    inviteMailer?.sendTelegramInvite(
                         user.attributes.email,
                         user.attributes.firstName,
                         user.attributes.fullName,
-                        benefitIndexUrl,
                         telegramBot?.generateInvite() ?: "",
                     )
 

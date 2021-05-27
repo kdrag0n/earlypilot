@@ -17,7 +17,7 @@ class Mailer(
     private val client = SendGrid(apiKey)
     private val fromEmail = Email(fromAddress, fromName)
 
-    private suspend fun sendEmail(toAddress: String, toName: String?, subject: String, bodyText: String) {
+    suspend fun sendEmail(toAddress: String, toName: String?, subject: String, bodyText: String) {
         val toEmail = Email(toAddress, toName)
         val content = Content("text/plain", bodyText)
 
@@ -38,37 +38,6 @@ class Mailer(
                 throw SendgridException("[${resp.statusCode}] ${resp.body}")
             }
         }
-    }
-
-    suspend fun sendWelcomeTelegramInvite(
-        address: String,
-        firstName: String,
-        fullName: String,
-        benefitIndexUrl: String,
-        telegramInvite: String,
-    ) {
-        sendEmail(
-            address,
-            fullName,
-            "Welcome, $firstName!",
-            """
-                Hey $firstName,
-                
-                Thank you for supporting me and my work! I really appreciate it. People like you help me keep working on Android projects for everyone to enjoy.
-                
-                Now, to get your rewards:
-                    • Download early access files: $benefitIndexUrl
-                    • Join the Telegram group for priority support and notifications: $telegramInvite
-                
-                Questions? Just reply to this email or message me anywhere. Thanks again for your generosity!
-                
-                Thanks,
-                $fromName
-
-                ---
-                (I sent you this email because you just subscribed on Patreon. Don't worry, you won't get any more emails and haven't been added to any mailing lists.)
-            """.trimIndent()
-        )
     }
 }
 
