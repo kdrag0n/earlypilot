@@ -13,6 +13,7 @@ object Grants : IntIdTable("grants") {
     val expireTime = timestamp("expire_time")
     val accessCount = integer("access_count").default(0)
     val lastAccessTime = timestamp("last_access_time").nullable().default(null)
+    val disabled = bool("disabled").default(false)
 }
 
 class Grant(id: EntityID<Int>) : IntEntity(id), Principal {
@@ -23,4 +24,5 @@ class Grant(id: EntityID<Int>) : IntEntity(id), Principal {
     var expireTime by Grants.expireTime
     var accessCount by Grants.accessCount
     var lastAccessTime by Grants.lastAccessTime
+    var disabled by Grants.disabled
 }

@@ -92,7 +92,7 @@ private class GrantAuthenticationProvider(
                 Grant.findById(info.grantId)
             } ?: return@newSuspendedTransaction null
 
-            if (grant.path != path || Instant.now() > grant.expireTime) {
+            if (grant.disabled || grant.path != path || Instant.now() > grant.expireTime) {
                 return@newSuspendedTransaction null
             }
 
