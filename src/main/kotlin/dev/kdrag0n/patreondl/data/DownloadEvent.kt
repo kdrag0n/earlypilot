@@ -8,9 +8,9 @@ import org.jetbrains.exposed.sql.`java-time`.CurrentTimestamp
 import org.jetbrains.exposed.sql.`java-time`.timestamp
 
 object DownloadEvents : IntIdTable("download_events") {
-    val accessType = enumerationByName("access_type", 16, AccessType::class)
-    val tag = text("tag")
-    val fileName = text("file_name")
+    val accessType = enumerationByName("access_type", 16, AccessType::class).index()
+    val tag = text("tag").index()
+    val fileName = text("file_name").index()
     val fileHash = text("file_hash").index()
     val downloadTime = timestamp("download_time").defaultExpression(CurrentTimestamp())
     val clientIp = text("client_ip")
