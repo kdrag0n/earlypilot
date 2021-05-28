@@ -90,6 +90,7 @@ data class Config(
             val publicKey: String,
             val secretKey: String,
             val webhookSecret: String,
+            val webhookKey: String,
         )
     }
 
