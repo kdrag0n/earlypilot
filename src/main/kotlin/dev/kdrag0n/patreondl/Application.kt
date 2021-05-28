@@ -4,6 +4,7 @@ import dev.kdrag0n.patreondl.content.exclusiveModule
 import dev.kdrag0n.patreondl.content.publicModule
 import dev.kdrag0n.patreondl.data.initDatabase
 import dev.kdrag0n.patreondl.external.patreon.webhooksModule
+import dev.kdrag0n.patreondl.payments.paymentsModule
 import dev.kdrag0n.patreondl.security.authModule
 import io.ktor.locations.*
 import io.ktor.application.*
@@ -33,6 +34,9 @@ fun Application.module() {
 
     // Exclusive content
     exclusiveModule()
+
+    // Payments
+    paymentsModule()
 
     // Simple Public/static routes
     publicModule()

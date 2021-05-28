@@ -6,10 +6,14 @@ import java.io.File
 data class Config(
     val web: Web,
     val content: Content,
+    val payments: Payments,
     val database: Database,
     val external: External,
 ) {
     data class Web(
+        val baseUrl: String,
+
+        // Security
         val corsAllowed: List<String>,
         val httpsOnly: Boolean,
         val forwardedHeaders: Boolean,
@@ -23,13 +27,20 @@ data class Config(
     data class Content(
         val benefitIndexUrl: String,
 
+        // Content sources
         val exclusiveSrc: String,
         val staticSrc: String,
 
         val exclusiveFilter: String,
     )
 
+    data class Payments(
+        val successUrl: String,
+        val oneTimePriceCents: Long,
+    )
+
     data class Database(
+        // PostgreSQL credentials
         val host: String,
         val port: Int,
         val database: String,
@@ -41,6 +52,7 @@ data class Config(
         val patreon: Patreon,
         val email: Email,
         val telegram: Telegram,
+        val stripe: Stripe,
     ) {
         data class Patreon(
             // API
@@ -64,12 +76,20 @@ data class Config(
         ) {
             data class MessageTemplates(
                 val telegramWelcome: String,
+                val singlePurchaseSuccessful: String,
+                val multiPurchaseSuccessful: String,
             )
         }
 
         data class Telegram(
             val botToken: String,
             val groupId: Long,
+        )
+
+        data class Stripe(
+            val publicKey: String,
+            val secretKey: String,
+            val webhookSecret: String,
         )
     }
 

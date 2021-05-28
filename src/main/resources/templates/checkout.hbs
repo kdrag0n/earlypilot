@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Buy {{product.name}} · {{config.external.patreon.creatorName}}</title>
+        <link rel="stylesheet" href="/static/style.css">
+        <script src="https://js.stripe.com/v3/"></script>
+    </head>
+
+    <body>
+        <section>
+            <div class="product">
+                <img
+                        src="https://i.imgur.com/EHyR2nP.png"
+                        alt="The cover of Stubborn Attachments"
+                />
+                <div class="description">
+                    <h3>{{product.name}}</h3>
+                    <h5>{{product.formattedPrice}}</h5>
+                </div>
+            </div>
+            <button type="button" id="checkout-button">Buy</button>
+        </section>
+
+        <script type="text/javascript">
+            let stripe = Stripe("{{config.external.stripe.publicKey}}");
+            let checkoutButton = document.getElementById("checkout-button");
+
+            checkoutButton.addEventListener("click", async () => {
+                let resp = await fetch("/api/stripe/create_checkout_session", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        productId: {{product.id}},
+                    }),
+                });
+                let session = await resp.json();
+
+                let result = await stripe.redirectToCheckout({
+                    sessionId: session.sessionId,
+                });
+                if (result.error) {
+                    alert(`Error: ${result.error.message}`);
+                }
+            });
+        </script>
+    </body>
+</html>

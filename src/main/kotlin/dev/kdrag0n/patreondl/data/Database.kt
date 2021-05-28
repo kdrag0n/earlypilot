@@ -24,6 +24,8 @@ fun Application.initDatabase() {
             Users,
             DownloadEvents,
             Grants,
+            Products,
+            Purchases,
         )
     }
 }

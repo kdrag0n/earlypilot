@@ -7,10 +7,8 @@ import io.ktor.auth.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.util.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.apache.commons.codec.binary.Base64
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -32,40 +30,7 @@ fun Application.installGrantAuthProvider() {
 @Serializable
 data class GrantInfo(
     val grantId: Int,
-) {
-    companion object {
-        suspend fun generateUrl(
-            call: ApplicationCall,
-            encrypter: AuthenticatedEncrypter,
-            tag: String,
-            durationHours: Float,
-        ): String {
-            val durationMs = (durationHours * 60 * 60 * 1000).toLong()
-            val grant = newSuspendedTransaction(Dispatchers.IO) {
-                Grant.new {
-                    path = call.request.path()
-                    this.tag = tag
-                    expireTime = Instant.now().plusMillis(durationMs)
-                }
-            }
-
-            val grantInfo = GrantInfo(
-                grantId = grant.id.value,
-            )
-
-            // Pad to nearest 16-byte boundary to avoid side-channel attacks
-            var grantJson = Json.encodeToString(grantInfo)
-            grantJson += " ".repeat(grantJson.length % 16)
-            // Encrypt padded JSON data
-            val grantData = Base64.encodeBase64String(encrypter.encrypt(grantJson.encodeToByteArray()))
-
-            return call.url {
-                parameters.clear()
-                parameters["grant"] = grantData
-            }
-        }
-    }
-}
+)
 
 private class GrantAuthenticationProvider(
     config: Configuration

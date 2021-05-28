@@ -1,17 +1,22 @@
 package dev.kdrag0n.patreondl
 
+import com.github.mustachejava.DefaultMustacheFactory
 import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.content.filters.ContentFilter
 import dev.kdrag0n.patreondl.external.email.Mailer
+import dev.kdrag0n.patreondl.external.stripe.CheckoutManager
 import dev.kdrag0n.patreondl.external.telegram.TelegramBot
 import dev.kdrag0n.patreondl.external.telegram.TelegramInviteManager
 import dev.kdrag0n.patreondl.http.PatreonApi
+import dev.kdrag0n.patreondl.security.GrantManager
 import io.ktor.application.*
 import io.ktor.client.*
 import io.ktor.client.engine.apache.*
 import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.locations.*
+import io.ktor.mustache.*
+import io.ktor.serialization.*
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 import org.koin.ktor.ext.Koin
@@ -31,16 +36,17 @@ fun Application.featuresModule() {
 
             // Third-party
             single { HttpClient(Apache) }
-            single { Json { ignoreUnknownKeys = true } }
 
             // API clients
             single { PatreonApi() }
             single { Mailer(get()) }
             single { TelegramBot(get()) }
+            single { CheckoutManager(get(), get(), get()) }
 
             // Logic
             single { TelegramInviteManager(get(), get(), get()) }
-            single { ContentFilter.createByName(get(), get(), (get() as Config).content.exclusiveFilter) }
+            single { ContentFilter.createByName(get(), get(), get<Config>().content.exclusiveFilter) }
+            single { GrantManager(get()) }
         }
 
         modules(mainModule)
@@ -96,5 +102,17 @@ fun Application.featuresModule() {
     // Request logging
     install(CallLogging) {
         level = Level.INFO
+    }
+
+    // Templating
+    install(Mustache) {
+        mustacheFactory = DefaultMustacheFactory("templates")
+    }
+
+    // JSON API
+    install(ContentNegotiation) {
+        json(Json {
+            ignoreUnknownKeys = true
+        })
     }
 }

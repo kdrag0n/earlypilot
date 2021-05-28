@@ -15,13 +15,11 @@ import org.koin.ktor.ext.inject
 fun Application.webhooksModule() {
     val config: Config by inject()
     val patreonApi: PatreonApi by inject()
-    val jsonParser: Json by inject()
     val inviteMailer: TelegramInviteManager by inject()
 
     routing {
         post("/_webhooks/patreon/${config.external.patreon.webhookKey}") {
-            val json = call.receiveText()
-            val event = jsonParser.decodeFromString<MemberPledgeEvent>(json)
+            val event = call.receive<MemberPledgeEvent>()
             val userId = event.data.relationships.user.data.id
 
             environment.log.info("Invalidating cache for user $userId")

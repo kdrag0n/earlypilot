@@ -7,12 +7,14 @@ import dev.kdrag0n.patreondl.data.DownloadEvent
 import dev.kdrag0n.patreondl.data.Grant
 import dev.kdrag0n.patreondl.security.AuthenticatedEncrypter
 import dev.kdrag0n.patreondl.security.GrantInfo
+import dev.kdrag0n.patreondl.security.GrantManager
 import dev.kdrag0n.patreondl.security.PatronSession
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
@@ -48,7 +50,7 @@ private fun Route.exclusiveGetRoute(
     config: Config,
 ) {
     val contentFilter: ContentFilter by inject()
-    val encrypter = AuthenticatedEncrypter(hex(config.web.grantKey))
+    val grantManager: GrantManager by inject()
 
     get("/exclusive/{path}") {
         val path = call.parameters["path"]!!
@@ -59,19 +61,23 @@ private fun Route.exclusiveGetRoute(
         if (grantTag != null && session != null && session.patreonUserId == config.external.patreon.creatorId) {
             // Convert from Float to allow for sub-hour precision in query parameters
             val durationHours = (call.request.queryParameters["expires"] ?: "48").toFloat()
-            val grant = GrantInfo.generateUrl(call, encrypter, grantTag, durationHours)
-            return@get call.respondText(grant)
+            val grantUrl = grantManager.generateGrantUrl(
+                call,
+                grantTag,
+                Grant.Type.CREATOR,
+                durationHours,
+            )
+            return@get call.respondText(grantUrl)
         }
 
         // Normal file serving path
-        serveExclusiveFile(config, contentFilter, config.content.exclusiveSrc, path)
+        serveExclusiveFile(config, contentFilter, path)
     }
 }
 
 private suspend fun PipelineContext<*, ApplicationCall>.serveExclusiveFile(
     config: Config,
     contentFilter: ContentFilter,
-    exclusiveSrc: String,
     path: String,
 ) {
     val startTime = Instant.now()
@@ -81,7 +87,7 @@ private suspend fun PipelineContext<*, ApplicationCall>.serveExclusiveFile(
         // False-positive caused by IOException
         @Suppress("BlockingMethodInNonBlockingContext")
         try {
-            val file = File("$exclusiveSrc/$path")
+            val file = File("${config.content.exclusiveSrc}/$path")
             val len = contentFilter.getFinalLength(call, file.length())
 
             file.inputStream().use { fis ->
@@ -130,6 +136,9 @@ fun getAccessInfo(config: Config, call: ApplicationCall): Pair<AccessType, Strin
             // Should never get here
             ?: error("Attempting to serve file without valid grant or session")
 
-        AccessType.GRANT to grant.tag
+        when (grant.type) {
+            Grant.Type.CREATOR -> AccessType.GRANT
+            Grant.Type.PURCHASE -> AccessType.PURCHASE
+        } to grant.tag
     }
 }

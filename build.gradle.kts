@@ -41,6 +41,8 @@ dependencies {
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
     implementation("io.ktor:ktor-server-sessions:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
+    implementation("io.ktor:ktor-mustache:$ktorVersion")
+    implementation("io.ktor:ktor-serialization:$ktorVersion")
 
     // Internal
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
@@ -69,6 +71,7 @@ dependencies {
     }
     implementation("dev.inmo:tgbotapi:$tgbotVersion")
     implementation("dev.inmo:tgbotapi.extensions.api:$tgbotVersion")
+    implementation("com.stripe:stripe-java:20.52.0")
 
     // Database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")

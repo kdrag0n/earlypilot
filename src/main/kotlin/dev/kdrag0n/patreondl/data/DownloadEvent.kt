@@ -38,5 +38,6 @@ class DownloadEvent(id: EntityID<Int>) : IntEntity(id) {
 enum class AccessType {
     USER,
     CREATOR,
-    GRANT
+    GRANT,
+    PURCHASE,
 }
