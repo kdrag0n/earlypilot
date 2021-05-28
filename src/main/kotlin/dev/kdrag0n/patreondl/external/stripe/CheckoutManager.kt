@@ -44,8 +44,11 @@ class CheckoutManager(
                 })
 
                 setPriceData(SessionCreateParams.LineItem.PriceData.builder().run {
+                    val price = product.priceCents?.toLong()
+                        ?: config.payments.defaultPriceCents
+
                     setCurrency("usd")
-                    setUnitAmount(config.payments.oneTimePriceCents)
+                    setUnitAmount(price)
                     setAllowPromotionCodes(true)
 
                     setProductData(SessionCreateParams.LineItem.PriceData.ProductData.builder().run {

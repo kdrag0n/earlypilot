@@ -36,7 +36,7 @@ data class Config(
 
     data class Payments(
         val successUrl: String,
-        val oneTimePriceCents: Long,
+        val defaultPriceCents: Long,
     )
 
     data class Database(
