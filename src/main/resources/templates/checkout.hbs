@@ -6,12 +6,20 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <link rel="stylesheet" href="/static/style.css">
         <script src="https://js.stripe.com/v3/"></script>
+
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{requestUrl}}">
+        <meta property="og:site_name" content="{{config.external.patreon.creatorName}}">
+        <meta property="og:title" content="Buy {{product.name}}">
+        <meta name="description" content="Get early access to {{product.name}} for a one-time purchase of {{formattedPrice}} or less and help support the developer, {{config.external.patreon.creatorName}}.">
+        <meta name="og:description" content="Get early access to {{product.name}} for a one-time purchase of {{formattedPrice}} or less and help support the developer, {{config.external.patreon.creatorName}}.">
+        <meta property="og:image" content="{{imageUrl}}">
     </head>
 
     <body>
         <section>
             <div class="product">
-                <img src="{{product.imageUrl}}" alt="{{product.name}}" />
+                <img src="{{product.imageUrl}}" alt="{{product.name}}" width="64" height="64" />
                 <div class="description">
                     <h3>{{product.name}}</h3>
                     <h5>{{formattedPrice}}</h5>

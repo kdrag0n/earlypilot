@@ -15,6 +15,7 @@ import io.ktor.mustache.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import io.ktor.util.*
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.koin.ktor.ext.inject
@@ -38,11 +39,21 @@ fun Application.paymentsModule() {
 
             val priceCents = product.priceCents
                 ?: config.payments.defaultPriceCents
+            val normalizedImageUrl = if (product.imageUrl?.startsWith("/") == true) {
+                call.url {
+                    // Remove leading slash
+                    path(product.imageUrl!!.substring(1))
+                }
+            } else {
+                product.imageUrl
+            }
 
             call.respond(MustacheContent("checkout.hbs", mapOf(
                 "product" to product,
                 "config" to config,
                 "formattedPrice" to numberFormat.format(priceCents.toDouble() / 100),
+                "requestUrl" to call.url(),
+                "imageUrl" to normalizedImageUrl,
             )))
         }
 
