@@ -35,7 +35,7 @@ class TelegramBot(
                     val user = User.find { Users.telegramInvite eq invite }.firstOrNull()
                         ?: return@newSuspendedTransaction logger.warn("User ${event.user.id} joined group with unknown invite $invite")
 
-                    logger.info("Associating Patreon user ${user.id} with Telegram user ${user.telegramId}")
+                    logger.info("Associating Patreon user ${user.id} with Telegram user ${event.user.id.chatId}")
                     user.telegramId = event.user.id.chatId
                 }
             }
