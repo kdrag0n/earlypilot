@@ -3,8 +3,7 @@ body {
     justify-content: center;
     align-items: center;
     background: #242d60;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
-    'Helvetica Neue', 'Ubuntu', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Ubuntu', sans-serif;
     height: 100vh;
     margin: 0;
     -webkit-font-smoothing: antialiased;
@@ -14,8 +13,7 @@ section {
     background: #ffffff;
     display: flex;
     flex-direction: column;
-    width: 400px;
-    height: 112px;
+    width: 22rem;
     border-radius: 6px;
     justify-content: space-between;
 }
@@ -30,7 +28,7 @@ section {
 p {
     font-style: normal;
     font-weight: 500;
-    font-size: 14px;
+    font-size: 16px;
     line-height: 20px;
     letter-spacing: -0.154px;
     color: #242d60;
@@ -44,15 +42,14 @@ p {
 }
 img {
     border-radius: 6px;
-    margin: 10px;
-    width: 54px;
-    height: 57px;
+    margin: 24px;
+    min-width: 64px;
 }
 h3,
 h5 {
     font-style: normal;
     font-weight: 500;
-    font-size: 14px;
+    font-size: 16px;
     line-height: 20px;
     letter-spacing: -0.154px;
     color: #242d60;
@@ -62,18 +59,19 @@ h5 {
     opacity: 0.5;
 }
 #checkout-button {
-    height: 36px;
+    padding: 16px;
     background: #556cd6;
     color: white;
     width: 100%;
-    font-size: 14px;
+    font-size: 16px;
     border: 0;
     font-weight: 500;
     cursor: pointer;
-    letter-spacing: 0.6;
+    letter-spacing: 0.6px;
     border-radius: 0 0 6px 6px;
     transition: all 0.2s ease;
-    box-shadow: 0px 4px 5.5px 0px rgba(0, 0, 0, 0.07);
+    box-shadow: 0 4px 5.5px 0 rgba(0, 0, 0, 0.07);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Ubuntu', sans-serif;
 }
 #checkout-button:hover {
     opacity: 0.8;
