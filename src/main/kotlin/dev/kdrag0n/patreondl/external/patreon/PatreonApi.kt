@@ -1,4 +1,4 @@
-package dev.kdrag0n.patreondl.http
+package dev.kdrag0n.patreondl.external.patreon
 
 import com.google.common.cache.CacheBuilder
 import com.patreon.PatreonAPI

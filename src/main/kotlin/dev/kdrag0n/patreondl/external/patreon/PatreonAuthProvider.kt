@@ -2,7 +2,6 @@ package dev.kdrag0n.patreondl.external.patreon
 
 import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.data.User
-import dev.kdrag0n.patreondl.http.PatreonApi
 import dev.kdrag0n.patreondl.security.AuthorizationResult
 import dev.kdrag0n.patreondl.security.PatronSession
 import dev.kdrag0n.patreondl.security.respondAuthorizationResult

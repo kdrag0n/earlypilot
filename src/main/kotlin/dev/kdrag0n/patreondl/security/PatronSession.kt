@@ -2,17 +2,15 @@ package dev.kdrag0n.patreondl.security
 
 import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.data.User
-import dev.kdrag0n.patreondl.http.PatreonApi
+import dev.kdrag0n.patreondl.external.patreon.PatreonApi
 import io.ktor.application.*
 import io.ktor.auth.*
-import io.ktor.features.*
 import io.ktor.sessions.*
 import io.ktor.util.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.koin.ktor.ext.inject
 import java.io.IOException
 import java.security.SecureRandom
-import java.time.Instant
 
 data class PatronSession(
     val patreonUserId: String,

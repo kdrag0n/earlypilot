@@ -2,7 +2,6 @@ package dev.kdrag0n.patreondl.external.patreon
 
 import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.external.telegram.TelegramInviteManager
-import dev.kdrag0n.patreondl.http.PatreonApi
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*

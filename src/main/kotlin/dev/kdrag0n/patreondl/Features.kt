@@ -7,7 +7,7 @@ import dev.kdrag0n.patreondl.external.email.Mailer
 import dev.kdrag0n.patreondl.external.stripe.CheckoutManager
 import dev.kdrag0n.patreondl.external.telegram.TelegramBot
 import dev.kdrag0n.patreondl.external.telegram.TelegramInviteManager
-import dev.kdrag0n.patreondl.http.PatreonApi
+import dev.kdrag0n.patreondl.external.patreon.PatreonApi
 import dev.kdrag0n.patreondl.security.GrantManager
 import io.ktor.application.*
 import io.ktor.client.*
