@@ -53,7 +53,7 @@ data class Config(
         val email: Email,
         val telegram: Telegram,
         val stripe: Stripe,
-        val sentry: Sentry,
+        val sentry: Sentry?,
     ) {
         data class Patreon(
             // API
@@ -95,7 +95,7 @@ data class Config(
         )
 
         data class Sentry(
-            val dsn: String?,
+            val dsn: String,
         )
     }
 

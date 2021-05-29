@@ -12,9 +12,9 @@ import org.koin.ktor.ext.inject
 fun Application.errorsModule() {
     val config: Config by inject()
 
-    if (config.external.sentry.dsn != null) {
+    if (config.external.sentry != null) {
         Sentry.init { options ->
-            options.dsn = config.external.sentry.dsn
+            options.dsn = config.external.sentry!!.dsn
         }
     }
 
