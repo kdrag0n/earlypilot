@@ -18,10 +18,12 @@ import io.ktor.routing.*
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.koin.ktor.ext.inject
+import java.text.NumberFormat
 
 fun Application.paymentsModule() {
     val config: Config by inject()
     val checkoutManager: CheckoutManager by inject()
+    val numberFormat = NumberFormat.getCurrencyInstance()
 
     Stripe.apiKey = config.external.stripe.secretKey
 
@@ -34,9 +36,13 @@ fun Application.paymentsModule() {
                     .firstOrNull()
             } ?: return@get call.respond(HttpStatusCode.NotFound)
 
+            val priceCents = product.priceCents
+                ?: config.payments.defaultPriceCents
+
             call.respond(MustacheContent("checkout.hbs", mapOf(
                 "product" to product,
                 "config" to config,
+                "formattedPrice" to numberFormat.format(priceCents.toDouble() / 100),
             )))
         }
 

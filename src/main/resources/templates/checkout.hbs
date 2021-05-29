@@ -10,13 +10,10 @@
     <body>
         <section>
             <div class="product">
-                <img
-                        src="https://i.imgur.com/EHyR2nP.png"
-                        alt="The cover of Stubborn Attachments"
-                />
+                <img src="{{product.imageUrl}}" alt="{{product.name}}" />
                 <div class="description">
                     <h3>{{product.name}}</h3>
-                    <h5>{{product.formattedPrice}}</h5>
+                    <h5>{{formattedPrice}}</h5>
                 </div>
             </div>
             <button type="button" id="checkout-button">Buy</button>
