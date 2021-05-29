@@ -14,14 +14,18 @@ object Users : IdTable<String>("users") {
 
     val name = text("name")
     val email = text("email")
-    val accessToken = text("access_token")
+    val accessToken = text("access_token").nullable()
     val creationTime = timestamp("creation_time")
-    val loginTime = timestamp("login_time").defaultExpression(CurrentTimestamp())
-    val loginIp = text("login_ip")
-    val activityTime = timestamp("activity_time").defaultExpression(CurrentTimestamp())
+    val loginTime = timestamp("login_time").nullable().default(null)
+    val loginIp = text("login_ip").nullable()
+    val activityTime = timestamp("activity_time").nullable().default(null)
     val activityIp = text("activity_ip").nullable()
     val authState = enumerationByName("auth_state", 32, AuthorizationResult::class).nullable()
     val blocked = bool("blocked").default(false)
+
+    // Telegram integration
+    val telegramId = long("telegram_id").nullable().default(null)
+    val telegramInvite = text("telegram_invite").nullable().default(null).index()
 }
 
 class User(id: EntityID<String>) : Entity<String>(id) {
@@ -37,4 +41,7 @@ class User(id: EntityID<String>) : Entity<String>(id) {
     var activityIp by Users.activityIp
     var authState by Users.authState
     var blocked by Users.blocked
+
+    var telegramId by Users.telegramId
+    var telegramInvite by Users.telegramInvite
 }

@@ -2,6 +2,8 @@ package dev.kdrag0n.patreondl.external.patreon
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+import java.time.Instant
 
 @Serializable
 sealed class PatreonEntity {
@@ -26,6 +28,10 @@ class PatreonUser(
 
         @SerialName("full_name")
         val fullName: String,
+
+        private val created: String,
+        @Transient
+        val createdAt: Instant = Instant.parse(created),
     )
 }
 
