@@ -19,7 +19,7 @@ class TelegramInviteManager(
     suspend fun sendTelegramInvite(
         user: PatreonUser,
     ) {
-        val invite = newSuspendedTransaction {
+        val inviteText = newSuspendedTransaction {
             val dbUser = User.findById(user.id) ?: User.new(user.id) { }
             // Skip users with existing invites
             if (dbUser.telegramInvite != null) {
@@ -27,7 +27,13 @@ class TelegramInviteManager(
             }
 
             logger.info("Generating Telegram invite link for Patreon user ${user.id}")
-            val invite = telegramBot.generateInvite()
+            val invite = try {
+                telegramBot.generateInvite()
+            } catch (e: Exception) {
+                logger.error("Failed to generate Telegram invite link for Patreon user ${user.id}", e)
+                null
+            }
+
             dbUser.apply {
                 name = user.attributes.fullName
                 email = user.attributes.email
@@ -37,12 +43,13 @@ class TelegramInviteManager(
             }
 
             return@newSuspendedTransaction invite
+                ?: "<failed to create Telegram invite link; contact ${config.external.patreon.creatorName} for help>"
         } ?: return
 
         val messageText = config.external.email.messageTemplates.telegramWelcome
             .replace("[FIRST_NAME]", user.attributes.firstName)
             .replace("[BENEFIT_INDEX_URL]", config.content.benefitIndexUrl)
-            .replace("[TELEGRAM_INVITE]", invite)
+            .replace("[TELEGRAM_INVITE]", inviteText)
             .replace("[FROM_NAME]", config.external.patreon.creatorName)
 
         // Send email
