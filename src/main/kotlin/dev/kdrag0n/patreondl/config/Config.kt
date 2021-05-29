@@ -53,6 +53,7 @@ data class Config(
         val email: Email,
         val telegram: Telegram,
         val stripe: Stripe,
+        val sentry: Sentry,
     ) {
         data class Patreon(
             // API
@@ -91,6 +92,10 @@ data class Config(
             val secretKey: String,
             val webhookSecret: String,
             val webhookKey: String,
+        )
+
+        data class Sentry(
+            val dsn: String?,
         )
     }
 

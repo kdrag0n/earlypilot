@@ -1,21 +1,33 @@
 package dev.kdrag0n.patreondl
 
+import dev.kdrag0n.patreondl.config.Config
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.util.pipeline.*
+import io.sentry.Sentry
+import org.koin.ktor.ext.inject
 
 fun Application.errorsModule() {
+    val config: Config by inject()
+
+    if (config.external.sentry.dsn != null) {
+        Sentry.init { options ->
+            options.dsn = config.external.sentry.dsn
+        }
+    }
+
     install(StatusPages) {
         status(HttpStatusCode.BadRequest) { genericStatusError(it) }
         status(HttpStatusCode.Unauthorized) { genericStatusError(it) }
         status(HttpStatusCode.Forbidden) { genericStatusError(it) }
         status(HttpStatusCode.NotFound) { genericStatusError(it) }
 
-        exception<Throwable> { cause ->
+        exception<Throwable> { error ->
+            Sentry.captureException(error)
             genericStatusError(HttpStatusCode.InternalServerError)
-            throw cause
+            throw error
         }
     }
 }

@@ -5,8 +5,6 @@ import dev.kdrag0n.patreondl.content.filters.ContentFilter
 import dev.kdrag0n.patreondl.data.AccessType
 import dev.kdrag0n.patreondl.data.DownloadEvent
 import dev.kdrag0n.patreondl.data.Grant
-import dev.kdrag0n.patreondl.security.AuthenticatedEncrypter
-import dev.kdrag0n.patreondl.security.GrantInfo
 import dev.kdrag0n.patreondl.security.GrantManager
 import dev.kdrag0n.patreondl.security.PatronSession
 import io.ktor.application.*
@@ -14,7 +12,6 @@ import io.ktor.auth.*
 import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.http.content.*
-import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
@@ -30,7 +27,7 @@ import java.security.DigestOutputStream
 import java.security.MessageDigest
 import java.time.Instant
 
-@KtorExperimentalAPI
+@OptIn(KtorExperimentalAPI::class)
 fun Application.exclusiveModule() {
     val config: Config by inject()
 
