@@ -25,18 +25,19 @@ fun Application.webhooksModule() {
             val event = call.receive<MemberPledgeEvent>()
             val eventType = call.parameters["event_type"]!!
             val userId = event.data.relationships.user.data.id
+            val email = event.data.attributes.email
 
             environment.log.info("Invalidating cache for user $userId")
             patreonApi.invalidateUser(userId)
 
             val user = event.included
-                .find { it is PatreonUser && it.attributes.isEmailVerified } as PatreonUser
+                .find { it is PatreonUser && it.id == userId } as PatreonUser
 
             when (eventType) {
                 // New users
                 "members:pledge:create", "members:pledge:update" -> {
                     // Send Telegram invite
-                    inviteManager.sendTelegramInvite(user)
+                    inviteManager.sendTelegramInvite(user, email)
                 }
 
                 // Canceled users

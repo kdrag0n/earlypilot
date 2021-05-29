@@ -18,6 +18,7 @@ class TelegramInviteManager(
 
     suspend fun sendTelegramInvite(
         user: PatreonUser,
+        email: String,
     ) {
         val inviteText = newSuspendedTransaction {
             val dbUser = User.findById(user.id) ?: User.new(user.id) { }
@@ -36,7 +37,7 @@ class TelegramInviteManager(
 
             dbUser.apply {
                 name = user.attributes.fullName
-                email = user.attributes.email
+                this.email = email
                 creationTime = user.attributes.createdAt
 
                 telegramInvite = invite
@@ -54,7 +55,7 @@ class TelegramInviteManager(
 
         // Send email
         mailer.sendEmail(
-            user.attributes.email,
+            email,
             user.attributes.fullName,
             "Welcome, ${user.attributes.firstName}!",
             messageText,

@@ -8,6 +8,16 @@ import java.time.Instant
 @Serializable
 sealed class PatreonEntity {
     abstract val id: String
+
+    @Serializable
+    data class Reference(
+        val data: Data,
+    ) {
+        @Serializable
+        data class Data(
+            val id: String,
+        )
+    }
 }
 
 @Serializable
@@ -18,11 +28,6 @@ class PatreonUser(
 ) : PatreonEntity() {
     @Serializable
     data class Attributes(
-        val email: String,
-
-        @SerialName("is_email_verified")
-        val isEmailVerified: Boolean,
-
         @SerialName("first_name")
         val firstName: String,
 
@@ -48,7 +53,25 @@ class PatreonCampaign(
 ) : PatreonEntity()
 
 @Serializable
+@SerialName("tier")
+class PatreonTier(
+    override val id: String,
+) : PatreonEntity()
+
+@Serializable
 @SerialName("member")
 class PatreonMember(
     override val id: String,
-) : PatreonEntity()
+    val attributes: Attributes,
+    val relationships: Relationships,
+) : PatreonEntity() {
+    @Serializable
+    data class Attributes(
+        val email: String,
+    )
+
+    @Serializable
+    data class Relationships(
+        val user: Reference,
+    )
+}
