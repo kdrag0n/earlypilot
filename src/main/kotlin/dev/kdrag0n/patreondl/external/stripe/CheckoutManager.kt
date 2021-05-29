@@ -30,7 +30,7 @@ class CheckoutManager(
             putMetadata("productId", product.id.value.toString())
 
             setPaymentIntentData(SessionCreateParams.PaymentIntentData.builder().run {
-                setDescription("One-time purchase of ${product.name} (PID=${product.id})")
+                setDescription("One-time purchase of ${product.name} (product ID ${product.id})")
                 build()
             })
 
