@@ -78,7 +78,7 @@ class CheckoutManager(
     ) = (1..quantity).map { idx ->
         val grantKey = grantManager.generateGrantKey(
             targetPath = "/$targetPath",
-            tag = "PURCHASE=$purchaseId",
+            tag = "$purchaseId",
             type = Grant.Type.PURCHASE,
             // 1 month
             durationHours = 31f * 24,
