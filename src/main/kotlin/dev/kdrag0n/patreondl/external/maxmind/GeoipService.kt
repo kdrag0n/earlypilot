@@ -26,10 +26,6 @@ class GeoipService(
         }
 
         // Convert to ISO alpha-3 for PriceManager
-        return if (country.isInEuropeanUnion) {
-            "EU27_2020"
-        } else {
-            Locale("en", country.isoCode).isO3Country
-        }
+        return Locale("en", country.isoCode).isO3Country
     }
 }
