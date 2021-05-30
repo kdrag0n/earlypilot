@@ -9,6 +9,7 @@ import dev.kdrag0n.patreondl.data.Product
 import dev.kdrag0n.patreondl.data.Purchase
 import dev.kdrag0n.patreondl.data.Purchases
 import dev.kdrag0n.patreondl.external.email.Mailer
+import dev.kdrag0n.patreondl.payments.PriceManager
 import dev.kdrag0n.patreondl.security.GrantManager
 import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
@@ -20,7 +21,10 @@ class CheckoutManager(
     private val mailer: Mailer,
     private val grantManager: GrantManager,
 ) {
-    suspend fun createSession(product: Product): Session {
+    suspend fun createSession(
+        product: Product,
+        priceCents: Int,
+    ): Session {
         val params = SessionCreateParams.builder().run {
             setMode(SessionCreateParams.Mode.PAYMENT)
             addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
@@ -44,11 +48,8 @@ class CheckoutManager(
                 })
 
                 setPriceData(SessionCreateParams.LineItem.PriceData.builder().run {
-                    val price = product.priceCents?.toLong()
-                        ?: config.payments.defaultPriceCents
-
                     setCurrency("usd")
-                    setUnitAmount(price)
+                    setUnitAmount(priceCents.toLong())
                     setAllowPromotionCodes(true)
 
                     setProductData(SessionCreateParams.LineItem.PriceData.ProductData.builder().run {

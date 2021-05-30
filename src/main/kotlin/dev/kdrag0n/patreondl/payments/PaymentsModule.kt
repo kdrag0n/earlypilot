@@ -10,6 +10,7 @@ import dev.kdrag0n.patreondl.data.Product
 import dev.kdrag0n.patreondl.data.Products
 import dev.kdrag0n.patreondl.external.stripe.CheckoutManager
 import io.ktor.application.*
+import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.mustache.*
 import io.ktor.request.*
@@ -24,7 +25,8 @@ import java.text.NumberFormat
 fun Application.paymentsModule() {
     val config: Config by inject()
     val checkoutManager: CheckoutManager by inject()
-    val numberFormat = NumberFormat.getCurrencyInstance()
+    val priceManager: PriceManager by inject()
+    val currencyFormat: NumberFormat by inject()
 
     Stripe.apiKey = config.external.stripe.secretKey
 
@@ -37,8 +39,8 @@ fun Application.paymentsModule() {
                     .firstOrNull()
             } ?: return@get call.respond(HttpStatusCode.NotFound)
 
-            val priceCents = product.priceCents
-                ?: config.payments.defaultPriceCents
+
+            val priceCents = priceManager.getPriceForProduct(product, call.request.origin.remoteHost)
             val normalizedImageUrl = if (product.imageUrl?.startsWith("/") == true) {
                 call.url {
                     // Remove leading slash
@@ -51,7 +53,7 @@ fun Application.paymentsModule() {
             call.respond(MustacheContent("checkout.hbs", mapOf(
                 "product" to product,
                 "config" to config,
-                "formattedPrice" to numberFormat.format(priceCents.toDouble() / 100),
+                "formattedPrice" to currencyFormat.format(priceCents.toDouble() / 100),
                 "requestUrl" to call.url(),
                 "imageUrl" to normalizedImageUrl,
             )))
@@ -63,7 +65,8 @@ fun Application.paymentsModule() {
                 Product.findById(productReq.productId)
             } ?: return@post call.respond(HttpStatusCode.NotFound)
 
-            val session = checkoutManager.createSession(product)
+            val price = priceManager.getPriceForProduct(product, call.request.origin.remoteHost)
+            val session = checkoutManager.createSession(product, price)
             call.respond(CreateCheckoutSessionResponse(
                 sessionId = session.id,
             ))

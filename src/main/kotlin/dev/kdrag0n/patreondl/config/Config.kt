@@ -36,7 +36,9 @@ data class Config(
 
     data class Payments(
         val successUrl: String,
-        val defaultPriceCents: Long,
+        val defaultPriceCents: Int,
+        val usePriceParity: Boolean,
+        val minPriceCents: Int,
     )
 
     data class Database(
@@ -54,6 +56,7 @@ data class Config(
         val telegram: Telegram,
         val stripe: Stripe,
         val sentry: Sentry?,
+        val maxmind: MaxMind,
     ) {
         data class Patreon(
             // API
@@ -96,6 +99,10 @@ data class Config(
 
         data class Sentry(
             val dsn: String,
+        )
+
+        data class MaxMind(
+            val databasePath: String,
         )
     }
 

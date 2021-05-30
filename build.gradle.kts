@@ -63,6 +63,7 @@ dependencies {
     // Config
     implementation("com.sksamuel.hoplite:hoplite-core:$hopliteVersion")
     implementation("com.sksamuel.hoplite:hoplite-hocon:$hopliteVersion")
+    implementation("com.github.doyaaaaaken:kotlin-csv-jvm:0.15.2")
 
     // API
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
@@ -77,6 +78,10 @@ dependencies {
     implementation("dev.inmo:tgbotapi:$tgbotVersion")
     implementation("dev.inmo:tgbotapi.extensions.api:$tgbotVersion")
     implementation("com.stripe:stripe-java:20.52.0")
+    implementation("com.maxmind.geoip2:geoip2:2.15.0") {
+        // Newer version of Apache HTTP client breaks Patreon API library
+        exclude(group = "org.apache.httpcomponents")
+    }
 
     // Database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
