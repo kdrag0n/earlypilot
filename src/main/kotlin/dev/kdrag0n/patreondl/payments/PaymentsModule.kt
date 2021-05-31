@@ -74,7 +74,6 @@ fun Application.paymentsModule() {
 
         post("/_webhooks/stripe/${config.external.stripe.webhookKey}") {
             val payload = call.receiveText()
-            println(payload)
             val event = try {
                 Webhook.constructEvent(
                     payload,
