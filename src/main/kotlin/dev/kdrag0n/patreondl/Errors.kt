@@ -25,9 +25,10 @@ fun Application.errorsModule() {
         status(HttpStatusCode.NotFound) { genericStatusError(it) }
 
         exception<Throwable> { error ->
+            environment.log.error("Uncaught exception in route", error)
             Sentry.captureException(error)
+
             genericStatusError(HttpStatusCode.InternalServerError)
-            throw error
         }
     }
 }
