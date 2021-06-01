@@ -41,7 +41,9 @@ class TelegramBot(
                     ?: return@onChatMemberUpdated
 
                 newSuspendedTransaction {
-                    val user = User.find { Users.telegramInvite eq invite }.firstOrNull()
+                    // If we didn't create the invite, Telegram truncates it with "..."
+                    // Enough of the link remains for it to be identifiable, so find it with LIKE
+                    val user = User.find { Users.telegramInvite like invite.replace("...", "%") }.firstOrNull()
                         ?: return@newSuspendedTransaction logger.warn("User ${event.user.id} joined group with unknown invite $invite")
 
                     logger.info("Associating Patreon user ${user.id} with Telegram user ${event.user.id.chatId}")
