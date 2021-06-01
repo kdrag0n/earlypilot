@@ -28,6 +28,12 @@ class TelegramBot(
 
         bot.buildBehaviour(GlobalScope) {
             onChatMemberUpdated { event ->
+                // Validate chat
+                if (event.chat.id != chatId) {
+                    return@onChatMemberUpdated
+                }
+
+                // Event includes invite link = "member joined via invite link"
                 val invite = event.inviteLink?.inviteLink
                     ?: return@onChatMemberUpdated
 
