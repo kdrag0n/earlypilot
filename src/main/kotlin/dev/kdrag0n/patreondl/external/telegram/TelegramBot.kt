@@ -1,6 +1,7 @@
 package dev.kdrag0n.patreondl.external.telegram
 
 import dev.inmo.tgbotapi.bot.Ktor.telegramBot
+import dev.inmo.tgbotapi.bot.exceptions.CommonRequestException
 import dev.inmo.tgbotapi.extensions.api.chat.invite_links.createChatInviteLink
 import dev.inmo.tgbotapi.extensions.api.chat.invite_links.revokeChatInviteLink
 import dev.inmo.tgbotapi.extensions.api.chat.members.kickChatMember
@@ -58,7 +59,16 @@ class TelegramBot(
     }
 
     suspend fun removeUser(id: Long) {
-        bot.kickChatMember(chatId, UserId(id))
+        try {
+            bot.kickChatMember(chatId, UserId(id))
+        } catch (e: CommonRequestException) {
+            // People can leave the group voluntarily, so handle this gracefully
+            if (e.response.errorCode == 400 && e.response.description == "Bad Request: PARTICIPANT_ID_INVALID") {
+                logger.debug("User $id not in group")
+            } else {
+                throw e
+            }
+        }
     }
 
     suspend fun revokeInvite(invite: String) {
