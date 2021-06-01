@@ -88,6 +88,7 @@ data class Config(
         data class Telegram(
             val botToken: String,
             val groupId: Long,
+            val ownerId: Long,
         )
 
         data class Stripe(

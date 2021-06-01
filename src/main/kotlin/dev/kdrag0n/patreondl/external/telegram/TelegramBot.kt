@@ -5,6 +5,7 @@ import dev.inmo.tgbotapi.bot.exceptions.CommonRequestException
 import dev.inmo.tgbotapi.extensions.api.chat.invite_links.createChatInviteLink
 import dev.inmo.tgbotapi.extensions.api.chat.invite_links.revokeChatInviteLink
 import dev.inmo.tgbotapi.extensions.api.chat.members.kickChatMember
+import dev.inmo.tgbotapi.extensions.api.send.sendMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviour
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatMemberUpdated
 import dev.inmo.tgbotapi.types.ChatId
@@ -22,6 +23,7 @@ class TelegramBot(
 ) {
     private val bot = telegramBot(config.external.telegram.botToken)
     private val chatId = ChatId(config.external.telegram.groupId)
+    private val ownerId = ChatId(config.external.telegram.ownerId)
 
     @OptIn(PreviewFeature::class)
     suspend fun start() {
@@ -72,7 +74,17 @@ class TelegramBot(
     }
 
     suspend fun revokeInvite(invite: String) {
-        bot.revokeChatInviteLink(chatId, invite)
+        try {
+            bot.revokeChatInviteLink(chatId, invite)
+        } catch (e: CommonRequestException) {
+            // We can't revoke other admins' invite links, so ask the owner to do it
+            if (e.response.errorCode == 400 && e.response.description == "Bad Request: CHAT_ADMIN_REQUIRED") {
+                logger.error("Failed to revoke $invite - created by another admin")
+                bot.sendMessage(ownerId, "Revoke invite: $invite")
+            } else {
+                throw e
+            }
+        }
     }
 
     companion object {
