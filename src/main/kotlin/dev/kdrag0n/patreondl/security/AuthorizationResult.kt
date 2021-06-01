@@ -62,7 +62,7 @@ suspend fun ApplicationCall.respondAuthorizationResult(
             "Payment declined",
             """
                 You can‘t access benefits because your payment was declined.
-                Please fix the issue on Patreon and try again after 2 hours.
+                Please fix the issue on Patreon and try again.
             """.trimIndent()
         )
         AuthorizationResult.BLOCKED -> respondErrorPage(
