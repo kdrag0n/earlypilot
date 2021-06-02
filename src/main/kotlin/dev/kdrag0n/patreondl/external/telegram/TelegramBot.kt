@@ -85,7 +85,7 @@ class TelegramBot(
             // We can't revoke other admins' invite links, so ask the owner to do it
             if (e.response.errorCode == 400 && e.response.description == "Bad Request: CHAT_ADMIN_REQUIRED") {
                 logger.error("Failed to revoke $invite - created by another admin")
-                bot.sendMessage(ownerId, "Revoke invite: $invite")
+                bot.sendMessage(ownerId, "Revoke invite: $invite", disableWebPagePreview = true)
             } else {
                 throw e
             }
