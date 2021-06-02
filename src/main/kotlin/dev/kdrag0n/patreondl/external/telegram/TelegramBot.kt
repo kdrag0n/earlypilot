@@ -6,6 +6,7 @@ import dev.inmo.tgbotapi.extensions.api.chat.invite_links.createChatInviteLink
 import dev.inmo.tgbotapi.extensions.api.chat.invite_links.revokeChatInviteLink
 import dev.inmo.tgbotapi.extensions.api.chat.members.kickChatMember
 import dev.inmo.tgbotapi.extensions.api.send.sendMessage
+import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContextReceiver
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviour
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatMemberUpdated
 import dev.inmo.tgbotapi.types.ChatId
@@ -23,10 +24,10 @@ class TelegramBot(
 ) {
     private val bot = telegramBot(config.external.telegram.botToken)
     private val chatId = ChatId(config.external.telegram.groupId)
-    private val ownerId = ChatId(config.external.telegram.ownerId)
+    val ownerId = ChatId(config.external.telegram.ownerId)
 
     @OptIn(PreviewFeature::class)
-    suspend fun start() {
+    suspend fun start(block: BehaviourContextReceiver<Unit> = { }) {
         logger.info("Starting bot with long polling")
 
         bot.buildBehaviour(GlobalScope) {
@@ -50,6 +51,8 @@ class TelegramBot(
                     user.telegramId = event.user.id.chatId
                 }
             }
+
+            block()
         }.start()
     }
 

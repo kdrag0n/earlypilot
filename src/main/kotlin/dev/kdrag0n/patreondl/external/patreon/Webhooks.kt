@@ -43,7 +43,7 @@ fun Application.webhooksModule() {
                 // Canceled users
                 "members:pledge:delete" -> {
                     // TODO: only remove users after access expiration
-                    inviteManager.removeTelegramUser(user)
+                    inviteManager.removeTelegramUser(user.id)
                 }
 
                 // Invalid events

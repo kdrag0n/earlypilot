@@ -1,5 +1,10 @@
 package dev.kdrag0n.patreondl.external.telegram
 
+import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
+import dev.inmo.tgbotapi.extensions.api.send.reply
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
+import dev.inmo.tgbotapi.extensions.utils.requireFromUserMessage
+import dev.inmo.tgbotapi.utils.PreviewFeature
 import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.data.User
 import dev.kdrag0n.patreondl.external.email.Mailer
@@ -12,8 +17,26 @@ class TelegramInviteManager(
     private val config: Config,
     private val telegramBot: TelegramBot,
 ) {
+    @OptIn(PreviewFeature::class)
     suspend fun startBot() {
-        telegramBot.start()
+        telegramBot.start {
+            // Management command: remove a list of Patreon user IDs
+            onCommand("removeusers", requireOnlyCommandInMessage = false) { ctx ->
+                // Owner only
+                if (ctx.requireFromUserMessage().user.id != telegramBot.ownerId) {
+                    return@onCommand
+                }
+
+                val userIds = ctx.content.text.split(WHITESPACE_REGEX).let { it.subList(1, it.size) }
+
+                val statusMsg = reply(ctx, "Removing ${userIds.size} Patreon users...")
+                userIds.forEach { userId ->
+                    removeTelegramUser(userId)
+                }
+
+                bot.editMessageText(statusMsg, "Removed ${userIds.size} Patreon users.")
+            }
+        }
     }
 
     suspend fun sendTelegramInvite(
@@ -62,12 +85,12 @@ class TelegramInviteManager(
         )
     }
 
-    suspend fun removeTelegramUser(patreonUser: PatreonUser) {
-        logger.info("Removing Patreon user ${patreonUser.id} from Telegram")
+    suspend fun removeTelegramUser(patreonUserId: String) {
+        logger.info("Removing Patreon user $patreonUserId from Telegram")
 
         val user = newSuspendedTransaction {
-            User.findById(patreonUser.id)
-        } ?: return logger.warn("Patreon user ${patreonUser.id} canceled, but not found in database")
+            User.findById(patreonUserId)
+        } ?: return logger.warn("Patreon user $patreonUserId canceled, but not found in database")
 
         val invite = user.telegramInvite
             ?: return logger.warn("Patreon user ${user.id} canceled with unknown Telegram invite")
@@ -78,6 +101,7 @@ class TelegramInviteManager(
     }
 
     companion object {
+        private val WHITESPACE_REGEX = Regex("""\s+""")
         private val logger = LoggerFactory.getLogger(TelegramInviteManager::class.java)
     }
 }
