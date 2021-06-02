@@ -1,14 +1,11 @@
 package dev.kdrag0n.patreondl.external.telegram
 
-import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
-import dev.inmo.tgbotapi.extensions.api.send.reply
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
-import dev.inmo.tgbotapi.extensions.utils.requireFromUserMessage
-import dev.inmo.tgbotapi.utils.PreviewFeature
 import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.data.User
 import dev.kdrag0n.patreondl.external.email.Mailer
 import dev.kdrag0n.patreondl.external.patreon.PatreonUser
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.slf4j.LoggerFactory
 
@@ -17,26 +14,14 @@ class TelegramInviteManager(
     private val config: Config,
     private val telegramBot: TelegramBot,
 ) {
-    @OptIn(PreviewFeature::class)
     suspend fun startBot() {
-        telegramBot.start {
-            // Management command: remove a list of Patreon user IDs
-            onCommand("removeusers", requireOnlyCommandInMessage = false) { ctx ->
-                // Owner only
-                if (ctx.requireFromUserMessage().user.id != telegramBot.ownerId) {
-                    return@onCommand
-                }
-
-                val userIds = ctx.content.text.split(WHITESPACE_REGEX).let { it.subList(1, it.size) }
-
-                val statusMsg = reply(ctx, "Removing ${userIds.size} Patreon users...")
-                userIds.forEach { userId ->
-                    removeTelegramUser(userId)
-                }
-
-                bot.editMessageText(statusMsg, "Removed ${userIds.size} Patreon users.")
+        GlobalScope.launch {
+            for (userId in telegramBot.removeUsers) {
+                removeTelegramUser(userId)
             }
         }
+
+        telegramBot.start()
     }
 
     suspend fun sendTelegramInvite(
@@ -101,7 +86,6 @@ class TelegramInviteManager(
     }
 
     companion object {
-        private val WHITESPACE_REGEX = Regex("""\s+""")
         private val logger = LoggerFactory.getLogger(TelegramInviteManager::class.java)
     }
 }

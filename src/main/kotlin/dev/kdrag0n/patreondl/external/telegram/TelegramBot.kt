@@ -5,10 +5,13 @@ import dev.inmo.tgbotapi.bot.exceptions.CommonRequestException
 import dev.inmo.tgbotapi.extensions.api.chat.invite_links.createChatInviteLink
 import dev.inmo.tgbotapi.extensions.api.chat.invite_links.revokeChatInviteLink
 import dev.inmo.tgbotapi.extensions.api.chat.members.kickChatMember
+import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
+import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.sendMessage
-import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContextReceiver
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviour
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatMemberUpdated
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
+import dev.inmo.tgbotapi.extensions.utils.requireFromUserMessage
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.UserId
 import dev.inmo.tgbotapi.utils.PreviewFeature
@@ -16,6 +19,7 @@ import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.data.User
 import dev.kdrag0n.patreondl.data.Users
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.channels.Channel
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.slf4j.LoggerFactory
 
@@ -24,13 +28,16 @@ class TelegramBot(
 ) {
     private val bot = telegramBot(config.external.telegram.botToken)
     private val chatId = ChatId(config.external.telegram.groupId)
-    val ownerId = ChatId(config.external.telegram.ownerId)
+    private val ownerId = ChatId(config.external.telegram.ownerId)
+
+    val removeUsers = Channel<String>()
 
     @OptIn(PreviewFeature::class)
-    suspend fun start(block: BehaviourContextReceiver<Unit> = { }) {
+    suspend fun start() {
         logger.info("Starting bot with long polling")
 
         bot.buildBehaviour(GlobalScope) {
+            // Link Patreon and Telegram users together
             onChatMemberUpdated { event ->
                 // Validate chat
                 if (event.chat.id != chatId) {
@@ -52,7 +59,22 @@ class TelegramBot(
                 }
             }
 
-            block()
+            // Management command: remove a list of Patreon user IDs
+            onCommand("removeusers", requireOnlyCommandInMessage = false) { ctx ->
+                // Owner only
+                if (ctx.requireFromUserMessage().user.id != ownerId) {
+                    return@onCommand
+                }
+
+                val userIds = ctx.content.text.split(WHITESPACE_REGEX).let { it.subList(1, it.size) }
+
+                val statusMsg = reply(ctx, "Removing ${userIds.size} Patreon users...")
+                userIds.forEach { userId ->
+                    removeUsers.send(userId)
+                }
+
+                bot.editMessageText(statusMsg, "Removed ${userIds.size} Patreon users.")
+            }
         }.start()
     }
 
@@ -94,5 +116,6 @@ class TelegramBot(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TelegramBot::class.java)
+        private val WHITESPACE_REGEX = Regex("""\s+""")
     }
 }
