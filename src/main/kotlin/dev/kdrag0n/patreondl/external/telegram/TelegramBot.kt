@@ -8,21 +8,26 @@ import dev.inmo.tgbotapi.extensions.api.chat.members.kickChatMember
 import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.sendMessage
+import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviour
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatMemberUpdated
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.utils.requireFromUserMessage
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.UserId
+import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
+import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.utils.PreviewFeature
 import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.data.User
 import dev.kdrag0n.patreondl.data.Users
+import dev.kdrag0n.patreondl.splitWhitespace
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.slf4j.LoggerFactory
 
+@OptIn(PreviewFeature::class)
 class TelegramBot(
     config: Config,
 ) {
@@ -31,8 +36,8 @@ class TelegramBot(
     private val ownerId = ChatId(config.external.telegram.ownerId)
 
     val removeUsers = Channel<String>()
+    val declinedUsers = Channel<Pair<Int, String>>()
 
-    @OptIn(PreviewFeature::class)
     suspend fun start() {
         logger.info("Starting bot with long polling")
 
@@ -59,21 +64,32 @@ class TelegramBot(
                 }
             }
 
-            // Management command: remove a list of Patreon user IDs
-            onCommand("removeusers", requireOnlyCommandInMessage = false) { ctx ->
-                // Owner only
-                if (ctx.requireFromUserMessage().user.id != ownerId) {
-                    return@onCommand
-                }
+            /*
+             * Management commands
+             */
 
-                val userIds = ctx.content.text.split(WHITESPACE_REGEX).let { it.subList(1, it.size) }
+            // Help
+            onOwnerCommand("help") { ctx ->
+                reply(ctx, COMMANDS_HELP)
+            }
 
-                val statusMsg = reply(ctx, "Removing ${userIds.size} Patreon users...")
-                userIds.forEach { userId ->
-                    removeUsers.send(userId)
-                }
+            // Remove a list of Patreon user IDs
+            onOwnerListCommand("removeusers", "Removing", "Removed") { user ->
+                removeUsers.send(user)
+            }
 
-                bot.editMessageText(statusMsg, "Removed ${userIds.size} Patreon users.")
+            // Send declined payment reminders to a list of Patreon user IDs
+            onOwnerListCommand("declinedusers1", "Reminding", "Reminded") { user ->
+                declinedUsers.send(1 to user)
+            }
+            onOwnerListCommand("declinedusers2", "Reminding", "Reminded") { user ->
+                declinedUsers.send(2 to user)
+            }
+            onOwnerListCommand("declinedusers3", "Reminding", "Reminded") { user ->
+                declinedUsers.send(3 to user)
+            }
+            onOwnerListCommand("declinedusers4", "Reminding", "Reminded") { user ->
+                declinedUsers.send(4 to user)
             }
         }.start()
     }
@@ -114,8 +130,52 @@ class TelegramBot(
         }
     }
 
+    // Users not present in the database need manual dunning reminders
+    suspend fun requestManualDunning(reminderId: Int, userId: String) {
+        bot.sendMessage(ownerId, "Send dunning reminder $reminderId: Patreon user $userId")
+    }
+
+    private suspend inline fun BehaviourContext.onOwnerCommand(
+        name: String,
+        crossinline block: suspend BehaviourContext.(CommonMessage<TextContent>) -> Unit,
+    ) {
+        onCommand(name, requireOnlyCommandInMessage = false) { ctx ->
+            // Owner only
+            if (ctx.requireFromUserMessage().user.id != ownerId) {
+                return@onCommand
+            }
+
+            block(ctx)
+        }
+    }
+
+    private suspend inline fun BehaviourContext.onOwnerListCommand(
+        name: String,
+        actionPresent: String,
+        actionPast: String,
+        crossinline userCallback: suspend (String) -> Unit,
+    ) {
+        onOwnerCommand(name) { ctx ->
+            val userIds = ctx.content.text.splitWhitespace().let { it.subList(1, it.size) }
+
+            val statusMsg = reply(ctx, "$actionPresent ${userIds.size} Patreon users...")
+            userIds.forEach { userId ->
+                userCallback(userId)
+            }
+
+            bot.editMessageText(statusMsg, "$actionPast ${userIds.size} Patreon users.")
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(TelegramBot::class.java)
-        private val WHITESPACE_REGEX = Regex("""\s+""")
+        private val COMMANDS_HELP = """
+            Commands that accept whitespace-separated Patreon user IDs:
+            /removeusers - Remove users
+            /declinedusers1 - Remind declined users (#1; +0 days; 7 days left)
+            /declinedusers2 - Remind declined users (#2; +2 days; 5 days left)
+            /declinedusers3 - Remind declined users (#3; +3 days; 2 days left)
+            /declinedusers4 - Remind declined users (#4; +2 days; 0 days left)
+        """.trimIndent()
     }
 }

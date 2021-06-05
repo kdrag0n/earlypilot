@@ -1,6 +1,7 @@
 package dev.kdrag0n.patreondl.data
 
 import dev.kdrag0n.patreondl.security.AuthorizationResult
+import dev.kdrag0n.patreondl.splitWhitespace
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -44,4 +45,10 @@ class User(id: EntityID<String>) : Entity<String>(id) {
 
     var telegramId by Users.telegramId
     var telegramInvite by Users.telegramInvite
+
+    // This is a very bad assumption to make, but it's what Patreon does and we can't collect any other info here.
+    // Referenced in templates
+    @Suppress("unused")
+    val firstName: String
+        get() = name.splitWhitespace()[0]
 }

@@ -76,12 +76,21 @@ data class Config(
             val apiKey: String,
             val fromAddress: String,
 
+            val personalName: String,
+            val personalAddress: String,
+
             val messageTemplates: MessageTemplates,
         ) {
             data class MessageTemplates(
                 val telegramWelcome: String,
                 val singlePurchaseSuccessful: String,
                 val multiPurchaseSuccessful: String,
+
+                // Dunning
+                val declinedReminder1: String,
+                val declinedReminder2: String,
+                val declinedReminder3: String,
+                val declinedReminder4: String,
             )
         }
 

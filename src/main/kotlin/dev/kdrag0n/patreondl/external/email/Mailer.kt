@@ -7,6 +7,7 @@ import com.sendgrid.helpers.mail.Mail
 import com.sendgrid.helpers.mail.objects.Content
 import com.sendgrid.helpers.mail.objects.Email
 import dev.kdrag0n.patreondl.config.Config
+import dev.kdrag0n.patreondl.data.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -14,9 +15,17 @@ class Mailer(
     config: Config,
 ) {
     private val client = SendGrid(config.external.email.apiKey)
-    private val fromEmail = Email(config.external.email.fromAddress, config.external.patreon.creatorName)
+    private val creatorEmail = Email(config.external.email.fromAddress, config.external.patreon.creatorName)
+    private val personalEmail = Email(config.external.email.personalAddress, config.external.email.personalName)
 
-    suspend fun sendEmail(toAddress: String, toName: String?, subject: String, bodyText: String) {
+    suspend fun sendEmail(
+        toAddress: String,
+        toName: String?,
+        subject: String,
+        bodyText: String,
+        personal: Boolean = false,
+    ) {
+        val fromEmail = if (personal) personalEmail else creatorEmail
         val toEmail = Email(toAddress, toName)
         val content = Content("text/plain", bodyText)
 
@@ -37,6 +46,21 @@ class Mailer(
                 throw SendgridException("[${resp.statusCode}] ${resp.body}")
             }
         }
+    }
+
+    suspend fun sendEmail(
+        user: User,
+        subject: String,
+        bodyText: String,
+        personal: Boolean = false,
+    ) {
+        sendEmail(
+            user.email,
+            user.name,
+            subject,
+            bodyText,
+            personal = personal,
+        )
     }
 }
 

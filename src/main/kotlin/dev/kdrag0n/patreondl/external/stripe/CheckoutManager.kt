@@ -8,8 +8,9 @@ import dev.kdrag0n.patreondl.data.Grant
 import dev.kdrag0n.patreondl.data.Product
 import dev.kdrag0n.patreondl.data.Purchase
 import dev.kdrag0n.patreondl.data.Purchases
+import dev.kdrag0n.patreondl.external.email.EmailTemplates
+import dev.kdrag0n.patreondl.external.email.EmailTemplates.Companion.execute
 import dev.kdrag0n.patreondl.external.email.Mailer
-import dev.kdrag0n.patreondl.payments.PriceManager
 import dev.kdrag0n.patreondl.security.GrantManager
 import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +21,7 @@ class CheckoutManager(
     private val config: Config,
     private val mailer: Mailer,
     private val grantManager: GrantManager,
+    private val emailTemplates: EmailTemplates,
 ) {
     suspend fun createSession(
         product: Product,
@@ -132,15 +134,16 @@ class CheckoutManager(
         val targetPath = "exclusive/${product.path}"
         val grantUrls = generateGrantLinks(quantity, purchase.id.value, targetPath)
         val messageTemplate = if (quantity > 1) {
-            config.external.email.messageTemplates.multiPurchaseSuccessful
+            emailTemplates.multiPurchaseSuccessful
         } else {
-            config.external.email.messageTemplates.singlePurchaseSuccessful
+            emailTemplates.singlePurchaseSuccessful
         }
 
         // Generate email
-        val messageText = messageTemplate
-            .replace("[PRODUCT_NAME]", product.name)
-            .replace("[DOWNLOAD_URLS]", grantUrls.joinToString(LIST_SEPARATOR))
+        val messageText = messageTemplate.execute(mapOf(
+            "product" to product,
+            "downloadUrls" to grantUrls.joinToString(LIST_SEPARATOR),
+        ))
 
         // Send email
         mailer.sendEmail(

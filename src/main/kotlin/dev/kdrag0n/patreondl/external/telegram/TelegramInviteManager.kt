@@ -2,6 +2,9 @@ package dev.kdrag0n.patreondl.external.telegram
 
 import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.data.User
+import dev.kdrag0n.patreondl.external.email.DunningMailer
+import dev.kdrag0n.patreondl.external.email.EmailTemplates
+import dev.kdrag0n.patreondl.external.email.EmailTemplates.Companion.execute
 import dev.kdrag0n.patreondl.external.email.Mailer
 import dev.kdrag0n.patreondl.external.patreon.PatreonUser
 import kotlinx.coroutines.GlobalScope
@@ -10,14 +13,32 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 import org.slf4j.LoggerFactory
 
 class TelegramInviteManager(
-    private val mailer: Mailer,
     private val config: Config,
+    private val mailer: Mailer,
     private val telegramBot: TelegramBot,
+    private val dunningMailer: DunningMailer,
+    private val emailTemplates: EmailTemplates,
 ) {
     suspend fun startBot() {
+        // Remove users
         GlobalScope.launch {
             for (userId in telegramBot.removeUsers) {
                 removeTelegramUser(userId)
+            }
+        }
+
+        // Remind users about declined payments
+        GlobalScope.launch {
+            for ((reminderId, userId) in telegramBot.declinedUsers) {
+                val user = newSuspendedTransaction {
+                    User.findById(userId)
+                }
+
+                if (user != null) {
+                    dunningMailer.sendReminder(reminderId, user)
+                } else {
+                    telegramBot.requestManualDunning(reminderId, userId)
+                }
             }
         }
 
@@ -28,8 +49,10 @@ class TelegramInviteManager(
         user: PatreonUser,
         email: String,
     ) {
-        val inviteText = newSuspendedTransaction {
-            val dbUser = User.findById(user.id) ?: User.new(user.id) { }
+        val (dbUser, inviteText) = newSuspendedTransaction {
+            val dbUser = User.findById(user.id)
+                ?: User.new(user.id) { }
+
             // Skip users with existing invites
             if (dbUser.telegramInvite != null) {
                 return@newSuspendedTransaction null
@@ -47,25 +70,23 @@ class TelegramInviteManager(
                 name = user.attributes.fullName
                 this.email = email
                 creationTime = user.attributes.createdAt
-
                 telegramInvite = invite
             }
 
-            return@newSuspendedTransaction invite
-                ?: "<failed to create Telegram invite link; contact ${config.external.patreon.creatorName} for help>"
+            return@newSuspendedTransaction dbUser to (invite
+                ?: "<failed to create Telegram invite link; contact ${config.external.patreon.creatorName} for help>")
         } ?: return
 
-        val messageText = config.external.email.messageTemplates.telegramWelcome
-            .replace("[FIRST_NAME]", user.attributes.firstName)
-            .replace("[BENEFIT_INDEX_URL]", config.content.benefitIndexUrl)
-            .replace("[TELEGRAM_INVITE]", inviteText)
-            .replace("[FROM_NAME]", config.external.patreon.creatorName)
+        val messageText = emailTemplates.telegramWelcome.execute(mapOf(
+            "user" to user,
+            "config" to config,
+            "telegramInvite" to inviteText,
+        ))
 
         // Send email
         mailer.sendEmail(
-            email,
-            user.attributes.fullName,
-            "Welcome, ${user.attributes.firstName}!",
+            dbUser,
+            "Welcome, ${dbUser.firstName}!",
             messageText,
         )
     }

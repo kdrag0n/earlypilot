@@ -3,6 +3,8 @@ package dev.kdrag0n.patreondl
 import com.github.mustachejava.DefaultMustacheFactory
 import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.content.filters.ContentFilter
+import dev.kdrag0n.patreondl.external.email.DunningMailer
+import dev.kdrag0n.patreondl.external.email.EmailTemplates
 import dev.kdrag0n.patreondl.external.email.Mailer
 import dev.kdrag0n.patreondl.external.maxmind.GeoipService
 import dev.kdrag0n.patreondl.external.stripe.CheckoutManager
@@ -40,16 +42,19 @@ fun Application.featuresModule() {
             // Third-party
             single { HttpClient(Apache) }
             single { NumberFormat.getCurrencyInstance() }
+            single { DefaultMustacheFactory() }
 
             // API clients
             single { PatreonApi() }
             single { Mailer(get()) }
             single { TelegramBot(get()) }
-            single { CheckoutManager(get(), get(), get()) }
+            single { CheckoutManager(get(), get(), get(), get()) }
             single { GeoipService(get()) }
 
             // Logic
-            single { TelegramInviteManager(get(), get(), get()) }
+            single { EmailTemplates(get(), get()) }
+            single { DunningMailer(get(), get(), get()) }
+            single { TelegramInviteManager(get(), get(), get(), get(), get()) }
             single { ContentFilter.createByName(get(), get(), get<Config>().content.exclusiveFilter) }
             single { GrantManager(get()) }
             single { PriceManager(get(), get(), get()) }
