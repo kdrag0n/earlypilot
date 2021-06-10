@@ -1,8 +1,13 @@
 package dev.kdrag0n.patreondl.external.email
 
 import dev.kdrag0n.patreondl.config.Config
+import dev.kdrag0n.patreondl.data.AccessType
+import dev.kdrag0n.patreondl.data.DownloadEvent
+import dev.kdrag0n.patreondl.data.DownloadEvents
 import dev.kdrag0n.patreondl.data.User
 import dev.kdrag0n.patreondl.external.email.EmailTemplates.Companion.execute
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 class DunningMailer(
     private val config: Config,
@@ -18,9 +23,16 @@ class DunningMailer(
             else -> error("Invalid reminder ID")
         }
 
+        val downloadCount = newSuspendedTransaction {
+            DownloadEvent.find {
+                (DownloadEvents.accessType eq AccessType.USER) and (DownloadEvents.tag eq user.id.value)
+            }.count()
+        }
+
         val messageText = template.execute(mapOf(
             "config" to config,
             "user" to user,
+            "downloadCount" to downloadCount,
         ))
 
         mailer.sendEmail(user, subject, messageText, personal = reminderId >= 3)
