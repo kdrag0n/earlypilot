@@ -30,7 +30,6 @@ class CheckoutManager(
         val params = SessionCreateParams.builder().run {
             setMode(SessionCreateParams.Mode.PAYMENT)
             addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
-            addPaymentMethodType(SessionCreateParams.PaymentMethodType.ALIPAY)
             setSuccessUrl(config.payments.successUrl)
             setCancelUrl(config.content.benefitIndexUrl)
             putMetadata("productId", product.id.value.toString())
