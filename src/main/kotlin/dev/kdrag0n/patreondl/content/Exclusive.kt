@@ -19,10 +19,9 @@ import io.ktor.util.*
 import io.ktor.util.pipeline.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.ktor.ext.inject
 import java.io.File
-import java.io.FileNotFoundException
 import java.security.DigestOutputStream
 import java.security.MessageDigest
 import java.time.Instant
@@ -80,11 +79,13 @@ private suspend fun PipelineContext<*, ApplicationCall>.serveExclusiveFile(
     val startTime = Instant.now()
     val digest = MessageDigest.getInstance(DownloadEvent.HASH_ALGORITHM)
 
-    val success = withContext(Dispatchers.IO) {
-        // False-positive caused by IOException
-        @Suppress("BlockingMethodInNonBlockingContext")
+    withContext(Dispatchers.IO) {
+        val file = File("${config.content.exclusiveSrc}/$path")
+        if (!file.exists()) {
+            return@withContext call.respond(HttpStatusCode.NotFound)
+        }
+
         try {
-            val file = File("${config.content.exclusiveSrc}/$path")
             val len = contentFilter.getFinalLength(call, file.length())
 
             file.inputStream().use { fis ->
@@ -94,26 +95,20 @@ private suspend fun PipelineContext<*, ApplicationCall>.serveExclusiveFile(
                     contentFilter.writeData(call, fis, digestOs)
                 }
             }
+        } finally {
+            // Collect the hash and log a download event
+            // Failed/partial downloads should still be logged to keep track of possible accesses
+            transaction {
+                DownloadEvent.new {
+                    val accessInfo = getAccessInfo(config, call)
+                    accessType = accessInfo.first
+                    tag = accessInfo.second
 
-            true
-        } catch (e: FileNotFoundException) {
-            call.respond(HttpStatusCode.NotFound)
-            false
-        }
-    }
-
-    // Collect the hash and log a download event
-    if (success) {
-        newSuspendedTransaction(Dispatchers.IO) {
-            DownloadEvent.new {
-                val accessInfo = getAccessInfo(config, call)
-                accessType = accessInfo.first
-                tag = accessInfo.second
-
-                fileName = path
-                fileHash = hex(digest.digest())
-                downloadTime = startTime
-                clientIp = call.request.origin.remoteHost
+                    fileName = path
+                    fileHash = hex(digest.digest())
+                    downloadTime = startTime
+                    clientIp = call.request.origin.remoteHost
+                }
             }
         }
     }
