@@ -9,6 +9,7 @@ import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.data.Product
 import dev.kdrag0n.patreondl.data.Products
 import dev.kdrag0n.patreondl.external.stripe.CheckoutManager
+import dev.kdrag0n.patreondl.respondErrorPage
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.*
@@ -39,6 +40,20 @@ fun Application.paymentsModule() {
                     .firstOrNull()
             } ?: return@get call.respond(HttpStatusCode.NotFound)
 
+            // Public products are no longer available for purchase
+            if (!product.active) {
+                if (product.publicUrl != null) {
+                    call.respondRedirect(product.publicUrl!!, permanent = false)
+                } else {
+                    call.respondErrorPage(
+                        HttpStatusCode.Gone,
+                        "No longer available for purchase",
+                        "This product is no longer available purchase, likely because it is now public.",
+                    )
+                }
+
+                return@get
+            }
 
             val priceCents = priceManager.getPriceForProduct(product, call.request.origin.remoteHost)
             val normalizedImageUrl = if (product.imageUrl?.startsWith("/") == true) {
