@@ -103,7 +103,10 @@ class CheckoutManager(
         val email = session.customerEmail ?: session.customerDetails.email
 
         val (purchase, product) = newSuspendedTransaction {
-            val productId = session.metadata["productId"]!!.toInt()
+            // Missing product ID = purchase was tampered with or didn't come from this server
+            val productId = session.metadata["productId"]?.toInt()
+                ?: return@newSuspendedTransaction null to null
+
             val product = Product.findById(productId)
                 ?: error("Stripe returned invalid product ID $productId")
 
@@ -130,7 +133,7 @@ class CheckoutManager(
         }
 
         // Generate grants
-        val targetPath = "exclusive/${product.path}"
+        val targetPath = "exclusive/${product!!.path}"
         val grantUrls = generateGrantLinks(quantity, purchase.id.value, targetPath)
         val messageTemplate = if (quantity > 1) {
             emailTemplates.multiPurchaseSuccessful
