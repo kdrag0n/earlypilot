@@ -5,14 +5,14 @@ import com.github.mustachejava.Mustache
 import dev.kdrag0n.patreondl.config.Config
 import java.io.StringReader
 import java.io.StringWriter
+import java.io.Writer
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.full.memberProperties
 
 class EmailTemplates(
     config: Config,
-    private val mustacheFactory: DefaultMustacheFactory,
+    private val mustacheFactory: MustacheFactory,
 ) {
     private val templates = config.external.email.messageTemplates
 
@@ -39,6 +39,12 @@ class EmailTemplates(
         operator fun getValue(thisRef: Any?, property: KProperty<*>): Mustache {
             this.property = property
             return value
+        }
+    }
+
+    class MustacheFactory : DefaultMustacheFactory() {
+        override fun encode(value: String, writer: Writer) {
+            writer.write(value)
         }
     }
 

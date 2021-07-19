@@ -42,7 +42,7 @@ fun Application.featuresModule() {
             // Third-party
             single { HttpClient(Apache) }
             single { NumberFormat.getCurrencyInstance() }
-            single { DefaultMustacheFactory() }
+            single { EmailTemplates.MustacheFactory() }
 
             // API clients
             single { PatreonApi() }
