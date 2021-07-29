@@ -47,8 +47,8 @@ fun Application.paymentsModule() {
                 } else {
                     call.respondErrorPage(
                         HttpStatusCode.Gone,
-                        "No longer available for purchase",
-                        "This product is no longer available purchase, likely because it is now public.",
+                        "Not available for purchase",
+                        "This release is no longer available for purchase, likely because the early access period has elapsed and the release is now publicly available.",
                     )
                 }
 
