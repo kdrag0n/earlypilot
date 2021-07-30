@@ -124,6 +124,8 @@ class TelegramBot(
             if (e.response.errorCode == 400 && e.response.description == "Bad Request: CHAT_ADMIN_REQUIRED") {
                 logger.error("Failed to revoke $invite - created by another admin")
                 bot.sendMessage(ownerId, "Revoke invite: $invite", disableWebPagePreview = true)
+            } else if (e.response.errorCode == 400 && e.response.description == "Bad Request: INVITE_HASH_EXPIRED") {
+                /* Ignore attempts to revoke expired invites */
             } else {
                 throw e
             }
