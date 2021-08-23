@@ -11,6 +11,7 @@ import io.ktor.routing.*
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.Instant
 
 fun Application.telemetryModule() {
     transaction {
@@ -33,6 +34,7 @@ fun Application.telemetryModule() {
                 entry.apply {
                     androidId = report.ssaid
                     versionCode = report.versionCode
+                    reportedAt = Instant.now()
                     settings = report.settings
                 }
             }
