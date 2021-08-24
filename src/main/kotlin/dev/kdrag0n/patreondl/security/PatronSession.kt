@@ -37,9 +37,9 @@ data class PatronSession(
         }
 
         // Each step is separate in order to return a more precise error
-        val creatorPledges = user.pledges.filter { it.creator.id == creatorId }
-        val amountPledges = creatorPledges.filter { it.reward.amountCents >= minTierAmount }
-        val validPledge = creatorPledges.find { it.declinedSince == null }
+        val creatorPledges = user.pledges?.filter { it.creator.id == creatorId }
+        val amountPledges = creatorPledges?.filter { it.reward != null && it.reward.amountCents >= minTierAmount }
+        val validPledge = creatorPledges?.find { it.declinedSince == null }
         // Database
         val isBlocked = newSuspendedTransaction {
             val dbUser = User.findById(patreonUserId)
@@ -54,8 +54,8 @@ data class PatronSession(
             // Otherwise, allow the creator
             user.id == creatorId -> AuthorizationResult.SUCCESS
 
-            creatorPledges.isEmpty() -> AuthorizationResult.NO_PLEDGE
-            amountPledges.isEmpty() -> AuthorizationResult.LOW_TIER
+            creatorPledges?.isEmpty() != false -> AuthorizationResult.NO_PLEDGE
+            amountPledges?.isEmpty() != false -> AuthorizationResult.LOW_TIER
             validPledge == null -> AuthorizationResult.PAYMENT_DECLINED
 
             else -> AuthorizationResult.SUCCESS
