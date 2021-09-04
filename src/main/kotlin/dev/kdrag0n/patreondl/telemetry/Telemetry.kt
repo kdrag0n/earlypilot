@@ -30,7 +30,7 @@ fun Application.telemetryModule() {
             newSuspendedTransaction {
                 // Only keep the latest report for each SSAID
                 val entry = SettingsReport.find { SettingsReports.androidId eq report.ssaid }
-                    .firstOrNull() ?: SettingsReport.new { }
+                    .limit(1).firstOrNull() ?: SettingsReport.new { }
                 entry.apply {
                     androidId = report.ssaid
                     versionCode = report.versionCode

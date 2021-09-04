@@ -37,6 +37,7 @@ fun Application.paymentsModule() {
 
             val product = newSuspendedTransaction {
                 Product.find { Products.path eq itemPath }
+                    .limit(1)
                     .firstOrNull()
             } ?: return@get call.respond(HttpStatusCode.NotFound)
 

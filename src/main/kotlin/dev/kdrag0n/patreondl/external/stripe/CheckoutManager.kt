@@ -111,7 +111,7 @@ class CheckoutManager(
                 ?: error("Stripe returned invalid product ID $productId")
 
             // Idempotency: don't process duplicate events
-            if (!Purchase.find { Purchases.eventId eq session.id }.empty()) {
+            if (!Purchase.find { Purchases.eventId eq session.id }.limit(1).empty()) {
                 return@newSuspendedTransaction null to product
             }
 
