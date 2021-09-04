@@ -1,13 +1,11 @@
 package dev.kdrag0n.patreondl.external.stripe
 
+import com.stripe.model.Charge
 import com.stripe.model.checkout.Session
 import com.stripe.param.checkout.SessionCreateParams
 import com.stripe.param.checkout.SessionListLineItemsParams
 import dev.kdrag0n.patreondl.config.Config
-import dev.kdrag0n.patreondl.data.Grant
-import dev.kdrag0n.patreondl.data.Product
-import dev.kdrag0n.patreondl.data.Purchase
-import dev.kdrag0n.patreondl.data.Purchases
+import dev.kdrag0n.patreondl.data.*
 import dev.kdrag0n.patreondl.external.email.EmailTemplates
 import dev.kdrag0n.patreondl.external.email.EmailTemplates.Companion.execute
 import dev.kdrag0n.patreondl.external.email.Mailer
@@ -15,6 +13,7 @@ import dev.kdrag0n.patreondl.security.GrantManager
 import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 class CheckoutManager(
@@ -154,6 +153,30 @@ class CheckoutManager(
             subject = "Thank you for purchasing ${product.name}!",
             bodyText = messageText,
         )
+    }
+
+    suspend fun refundCharge(charge: Charge) {
+        if (!charge.refunded || charge.paymentIntent == null) {
+            return
+        }
+
+        newSuspendedTransaction {
+            val purchase = Purchase.find { Purchases.paymentIntentId eq charge.paymentIntent }
+                .limit(1).firstOrNull()
+                ?: return@newSuspendedTransaction
+
+            // Revoke grant
+            Grant.find { (Grants.type eq Grant.Type.PURCHASE) and (Grants.tag eq purchase.id.toString()) }.forEach {
+                it.disabled = true
+            }
+
+            // Revoke downloads
+            val downloads = DownloadEvent
+                .find { (DownloadEvents.accessType eq AccessType.PURCHASE) and (DownloadEvents.tag eq purchase.id.toString()) }
+            downloads.forEach {
+                it.active = false
+            }
+        }
     }
 
     companion object {

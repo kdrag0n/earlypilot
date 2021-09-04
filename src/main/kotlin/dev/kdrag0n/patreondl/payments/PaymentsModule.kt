@@ -3,6 +3,7 @@ package dev.kdrag0n.patreondl.payments
 import com.google.gson.JsonSyntaxException
 import com.stripe.Stripe
 import com.stripe.exception.SignatureVerificationException
+import com.stripe.model.Charge
 import com.stripe.model.checkout.Session
 import com.stripe.net.Webhook
 import dev.kdrag0n.patreondl.config.Config
@@ -107,6 +108,10 @@ fun Application.paymentsModule() {
                 "checkout.session.completed" -> {
                     val session = event.dataObjectDeserializer.`object`.get() as Session
                     checkoutManager.fulfillPurchase(session)
+                }
+                "charge.refunded" -> {
+                    val charge = event.dataObjectDeserializer.`object`.get() as Charge
+                    checkoutManager.refundCharge(charge)
                 }
             }
 
