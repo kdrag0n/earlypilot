@@ -10,7 +10,7 @@ import org.jetbrains.exposed.sql.`java-time`.timestamp
 object Purchases : IntIdTable("purchases") {
     val productId = reference("product_id", Products).index()
     val eventId = text("event_id").index()
-    val paymentIntentId = text("payment_intent_id")
+    val paymentIntentId = text("payment_intent_id").index()
     val customerId = text("customer_id")
     val quantity = integer("quantity")
     val email = text("email")
