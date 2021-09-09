@@ -1,22 +1,30 @@
 package dev.kdrag0n.patreondl.external.email
 
-import com.sendgrid.Method
-import com.sendgrid.Request
-import com.sendgrid.SendGrid
-import com.sendgrid.helpers.mail.Mail
-import com.sendgrid.helpers.mail.objects.Content
-import com.sendgrid.helpers.mail.objects.Email
 import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.data.User
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.engine.apache.*
+import io.ktor.client.features.auth.*
+import io.ktor.client.features.auth.providers.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 
 class Mailer(
     config: Config,
 ) {
-    private val client = SendGrid(config.external.email.apiKey)
-    private val creatorEmail = Email(config.external.email.fromAddress, config.external.patreon.creatorName)
-    private val personalEmail = Email(config.external.email.personalAddress, config.external.email.personalName)
+    private val client = HttpClient(Apache) {
+        install(Auth) {
+            basic {
+                username = "api"
+                password = config.external.email.apiKey
+                sendWithoutRequest = true
+            }
+        }
+    }
+    private val creatorEmail = "${config.external.patreon.creatorName} <${config.external.email.fromAddress}>"
+    private val personalEmail = "${config.external.email.personalName} <${config.external.email.personalAddress}>"
 
     suspend fun sendEmail(
         toAddress: String,
@@ -26,26 +34,13 @@ class Mailer(
         personal: Boolean = false,
     ) {
         val fromEmail = if (personal) personalEmail else creatorEmail
-        val toEmail = Email(toAddress, toName)
-        val content = Content("text/plain", bodyText)
-
-        val request = Request().apply {
-            method = Method.POST
-            endpoint = "mail/send"
-
-            // IOException = JSON marshal error - not blocking
-            @Suppress("BlockingMethodInNonBlockingContext")
-            body = Mail(fromEmail, subject, toEmail, content).build()
-        }
-
-        withContext(Dispatchers.IO) {
-            // On I/O thread
-            @Suppress("BlockingMethodInNonBlockingContext")
-            val resp = client.api(request)
-            if (resp.statusCode !in 200..299) {
-                throw SendgridException("[${resp.statusCode}] ${resp.body}")
-            }
-        }
+        val toEmail = if (toName == null) toAddress else "$toName <$toAddress>"
+        client.post<HttpStatement>("https://api.mailgun.net/v3/mg.kdrag0n.dev/messages") {
+            parameter("from", fromEmail)
+            parameter("to", toEmail)
+            parameter("subject", subject)
+            parameter("text", bodyText)
+        }.execute()
     }
 
     suspend fun sendEmail(
@@ -64,4 +59,4 @@ class Mailer(
     }
 }
 
-class SendgridException(message: String) : Exception(message)
+class MailgunException(message: String) : Exception(message)

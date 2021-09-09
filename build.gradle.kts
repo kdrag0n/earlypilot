@@ -43,6 +43,7 @@ dependencies {
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-core-jvm:$ktorVersion")
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
+    implementation("io.ktor:ktor-client-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-sessions:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-mustache:$ktorVersion")
@@ -70,10 +71,6 @@ dependencies {
     implementation("com.patreon:patreon:0.4.2") {
         // Exclude duplicate SLF4J implementation
         exclude(group = "org.slf4j", module = "slf4j-log4j12")
-    }
-    implementation("com.sendgrid:sendgrid-java:4.7.2") {
-        // Newer version of Apache HTTP client breaks Patreon API library
-        exclude(group = "org.apache.httpcomponents")
     }
     implementation("dev.inmo:tgbotapi:$tgbotVersion")
     implementation("dev.inmo:tgbotapi.extensions.api:$tgbotVersion")
