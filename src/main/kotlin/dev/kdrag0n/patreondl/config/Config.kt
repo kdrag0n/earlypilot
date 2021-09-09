@@ -35,7 +35,6 @@ data class Config(
     )
 
     data class Payments(
-        val successUrl: String,
         val defaultPriceCents: Int,
         val usePriceParity: Boolean,
         val minPriceCents: Int,

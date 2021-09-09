@@ -1,0 +1,68 @@
+body {
+    display: grid;
+    place-items: center;
+
+    padding: 0;
+    margin: 0;
+    min-height: 100vh;
+
+    font-size: 1rem;
+    line-height: 1.5;
+    font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI", Roboto, "Helvetica Neue", Ubuntu, Arial,
+        sans-serif,
+        "Apple Color Emoji";
+
+    background-color: #f1f1f0; /* N-1 50 */
+    color: #1c1b1b; /* N-1 900 */
+}
+
+header {
+    color: #000000; /* N-1 1000 */
+    border-bottom: 1px solid #e3e2e2; /* N-1 100 */
+    text-align: center;
+}
+
+article {
+    padding: 24px;
+    background-color: #fcfcfc; /* N-1 10 */
+    max-width: 40rem;
+    border-radius: 8px;
+}
+
+footer {
+    color: #474747; /* N-1 700 */
+    display: block;
+    border-top: 1px solid #e3e2e2; /* N-1 100 */
+    padding-top: 16px;
+}
+
+a {
+    color: #002263; /* A-1 800 */
+}
+
+a:visited {
+    color: #4b0a4d; /* A-3 800 */
+}
+
+.link-button {
+    background-color: #234baa; /* A-1 600 */
+    color: #ecf0f7; /* N-1 50 */
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    padding: 12px;
+}
+
+.button-container {
+    text-align: center;
+}
+
+p:not(:last-child) {
+    padding-bottom: 16px;
+}

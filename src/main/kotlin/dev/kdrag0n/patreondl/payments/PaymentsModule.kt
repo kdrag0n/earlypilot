@@ -7,10 +7,10 @@ import com.stripe.model.Charge
 import com.stripe.model.checkout.Session
 import com.stripe.net.Webhook
 import dev.kdrag0n.patreondl.config.Config
-import dev.kdrag0n.patreondl.data.Product
-import dev.kdrag0n.patreondl.data.Products
+import dev.kdrag0n.patreondl.data.*
 import dev.kdrag0n.patreondl.external.stripe.CheckoutManager
 import dev.kdrag0n.patreondl.respondErrorPage
+import dev.kdrag0n.patreondl.security.GrantManager
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.*
@@ -20,15 +20,18 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
 import kotlinx.serialization.Serializable
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.koin.ktor.ext.inject
 import java.text.NumberFormat
+import java.util.*
 
 fun Application.paymentsModule() {
     val config: Config by inject()
     val checkoutManager: CheckoutManager by inject()
     val priceManager: PriceManager by inject()
     val currencyFormat: NumberFormat by inject()
+    val grantManager: GrantManager by inject()
 
     Stripe.apiKey = config.external.stripe.secretKey
 
@@ -73,6 +76,35 @@ fun Application.paymentsModule() {
                 "formattedPrice" to currencyFormat.format(priceCents.toDouble() / 100),
                 "requestUrl" to call.url(),
                 "imageUrl" to normalizedImageUrl,
+            )))
+        }
+
+        get("/buy/success/{txRefId}") {
+            val txRefId = call.parameters["txRefId"]!!
+
+            val parsedUuid = runCatching {
+                UUID.fromString(txRefId)
+            }.getOrNull() ?: return@get call.respond(HttpStatusCode.BadRequest)
+
+            val (purchase, product) = newSuspendedTransaction {
+                val purchase = Purchase.find { Purchases.txRefId eq parsedUuid }
+                    .limit(1)
+                    .firstOrNull() ?: return@newSuspendedTransaction null
+
+                purchase to purchase.product
+            } ?: return@get call.respond(HttpStatusCode.NotFound)
+
+            val firstGrant = newSuspendedTransaction {
+                Grant.find { (Grants.type eq Grant.Type.PURCHASE) and (Grants.tag eq purchase.id.toString()) }
+                    .minByOrNull { it.id.value }
+            } ?: return@get call.respond(HttpStatusCode.NotFound)
+
+            val firstLink = grantManager.generateGrantUrl(call, firstGrant)
+
+            call.respond(MustacheContent("purchase_success.hbs", mapOf(
+                "product" to product,
+                "config" to config,
+                "firstDownloadLink" to firstLink,
             )))
         }
 

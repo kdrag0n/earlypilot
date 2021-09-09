@@ -17,6 +17,18 @@ class GrantManager(
 ) {
     private val encrypter = AuthenticatedEncrypter(hex(config.web.grantKey))
 
+    fun generateGrantKey(grant: Grant): String {
+        val grantInfo = GrantInfo(
+            grantId = grant.id.value,
+        )
+
+        // Pad to nearest 8-byte boundary to avoid side-channel attacks
+        var grantJson = Json.encodeToString(grantInfo)
+        grantJson += " ".repeat(grantJson.length % 8)
+        // Encrypt padded JSON data
+        return Base64.encodeBase64String(encrypter.encrypt(grantJson.encodeToByteArray()))
+    }
+
     suspend fun generateGrantKey(
         targetPath: String,
         tag: String,
@@ -33,15 +45,27 @@ class GrantManager(
             }
         }
 
-        val grantInfo = GrantInfo(
-            grantId = grant.id.value,
-        )
+        return generateGrantKey(grant)
+    }
 
-        // Pad to nearest 8-byte boundary to avoid side-channel attacks
-        var grantJson = Json.encodeToString(grantInfo)
-        grantJson += " ".repeat(grantJson.length % 8)
-        // Encrypt padded JSON data
-        return Base64.encodeBase64String(encrypter.encrypt(grantJson.encodeToByteArray()))
+    fun generateGrantUrl(
+        call: ApplicationCall,
+        targetPath: String,
+        grantKey: String,
+    ): String {
+        return call.url {
+            parameters.clear()
+            path(targetPath.trimStart('/'))
+            parameters["grant"] = grantKey
+        }
+    }
+
+    fun generateGrantUrl(
+        call: ApplicationCall,
+        grant: Grant,
+    ): String {
+        val grantKey = generateGrantKey(grant)
+        return generateGrantUrl(call, grant.path, grantKey)
     }
 
     suspend fun generateGrantUrl(
@@ -52,10 +76,6 @@ class GrantManager(
     ): String {
         val path = call.request.path()
         val grantKey = generateGrantKey(path, tag, type, durationHours)
-
-        return call.url {
-            parameters.clear()
-            parameters["grant"] = grantKey
-        }
+        return generateGrantUrl(call, path, grantKey)
     }
 }

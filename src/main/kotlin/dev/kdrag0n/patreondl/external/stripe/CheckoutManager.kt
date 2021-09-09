@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import java.util.*
 
 class CheckoutManager(
     private val config: Config,
@@ -26,12 +27,16 @@ class CheckoutManager(
         product: Product,
         priceCents: Int,
     ): Session {
+        val txRefId = UUID.randomUUID().toString()
+
         val params = SessionCreateParams.builder().run {
             setMode(SessionCreateParams.Mode.PAYMENT)
             addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
-            setSuccessUrl(config.payments.successUrl)
+            setSuccessUrl("${config.web.baseUrl}/buy/success/$txRefId")
             setCancelUrl(config.content.benefitIndexUrl)
+
             putMetadata("productId", product.id.value.toString())
+            putMetadata("txRefId", txRefId)
 
             setPaymentIntentData(SessionCreateParams.PaymentIntentData.builder().run {
                 setDescription("One-time purchase of ${product.name} (product ID ${product.id})")
@@ -106,6 +111,9 @@ class CheckoutManager(
             val productId = session.metadata["productId"]?.toInt()
                 ?: return@newSuspendedTransaction null to null
 
+            // Transaction reference ID for web flow
+            val txRefId = UUID.fromString(session.metadata["txRefId"])
+
             val product = Product.findById(productId)
                 ?: error("Stripe returned invalid product ID $productId")
 
@@ -121,6 +129,7 @@ class CheckoutManager(
                 customerId = session.customer
                 this.quantity = quantity.toInt()
                 this.email = email
+                this.txRefId = txRefId
             }
 
             purchase to product

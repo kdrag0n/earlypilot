@@ -15,6 +15,7 @@ object Purchases : IntIdTable("purchases") {
     val quantity = integer("quantity")
     val email = text("email")
     val purchaseTime = timestamp("purchase_time").defaultExpression(CurrentTimestamp())
+    val txRefId = uuid("tx_ref_id").nullable().default(null).index()
 }
 
 class Purchase(id: EntityID<Int>) : IntEntity(id) {
@@ -27,4 +28,5 @@ class Purchase(id: EntityID<Int>) : IntEntity(id) {
     var quantity by Purchases.quantity
     var email by Purchases.email
     var purchaseTime by Purchases.purchaseTime
+    var txRefId by Purchases.txRefId
 }
