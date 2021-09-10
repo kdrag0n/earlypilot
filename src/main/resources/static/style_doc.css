@@ -17,19 +17,19 @@ body {
         sans-serif,
         "Apple Color Emoji";
 
-    background-color: #f1f1f0; /* N-1 50 */
-    color: #1c1b1b; /* N-1 900 */
+    background-color: #ecf0f7; /* N-1 50 */
+    color: #191b1f; /* N-1 900 */
 }
 
 header {
     color: #000000; /* N-1 1000 */
-    border-bottom: 1px solid #e3e2e2; /* N-1 100 */
+    border-bottom: 1px solid #dee2e9; /* N-1 100 */
     text-align: center;
 }
 
 article {
     padding: 24px;
-    background-color: #fcfcfc; /* N-1 10 */
+    background-color: #fafcff; /* N-1 10 */
     max-width: 40rem;
     border-radius: 8px;
 }
@@ -37,7 +37,7 @@ article {
 footer {
     color: #5e5e5e; /* N-1 600 */
     display: block;
-    border-top: 1px solid #e3e2e2; /* N-1 100 */
+    border-top: 1px solid #dee2e9; /* N-1 100 */
     padding-top: 16px;
 }
 
@@ -70,22 +70,22 @@ p:not(:last-child) {
 /* Dark theme overrides - default is light theme */
 @media (prefers-color-scheme: dark) {
     body {
-        background-color: #1c1b1b; /* N-1 900 */
-        color: #f1f1f0; /* N-1 50 */
+        background-color: #191b1f; /* N-1 900 */
+        color: #ecf0f7; /* N-1 50 */
     }
 
     header {
-        color: #fcfcfc; /* N-1 10 */
-        border-bottom-color: #474747; /* N-1 700 */
+        color: #fafcff; /* N-1 10 */
+        border-bottom-color: #44464b; /* N-1 700 */
     }
 
     article {
-        background-color: #303030; /* N-1 800 */
+        background-color: #2e3034; /* N-1 800 */
     }
 
     footer {
-        color: #919190; /* N-1 400 */
-        border-top-color: #474747; /* N-1 700 */
+        color: #8d9096; /* N-1 400 */
+        border-top-color: #44464b; /* N-1 700 */
     }
 
     a {
@@ -98,6 +98,6 @@ p:not(:last-child) {
 
     .link-button {
         background-color: #a0c1ff; /* A-1 200 */
-        color: #1c1b1b; /* N-1 900 */
+        color: #191b1f; /* N-1 900 */
     }
 }
