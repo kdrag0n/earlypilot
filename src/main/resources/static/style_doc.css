@@ -66,3 +66,38 @@ a:visited {
 p:not(:last-child) {
     padding-bottom: 16px;
 }
+
+/* Dark theme overrides - default is light theme */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #1c1b1b; /* N-1 900 */
+        color: #f1f1f0; /* N-1 50 */
+    }
+
+    header {
+        color: #fcfcfc; /* N-1 10 */
+        border-bottom-color: #474747; /* N-1 700 */
+    }
+
+    article {
+        background-color: #303030; /* N-1 800 */
+    }
+
+    footer {
+        color: #919190; /* N-1 400 */
+        border-top-color: #474747; /* N-1 700 */
+    }
+
+    a {
+        color: #a0c1ff; /* A-1 200 */
+    }
+
+    a:visited {
+        color: #f2a1f4; /* A-3 200 */
+    }
+
+    .link-button {
+        background-color: #a0c1ff; /* A-1 200 */
+        color: #1c1b1b; /* N-1 900 */
+    }
+}
