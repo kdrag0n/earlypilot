@@ -43,6 +43,11 @@ footer {
 
 a {
     color: #234baa; /* A-1 600 */
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
 }
 
 a:visited {
@@ -60,6 +65,8 @@ a:visited {
     border-radius: 48px;
     text-decoration: none;
     padding: 16px;
+
+    text-decoration: none !important;
 }
 
 .button-container {
