@@ -50,6 +50,9 @@ a:visited {
 }
 
 .link-button {
+    /* Wrap text inside the container */
+    display: inline-block;
+
     background-color: #234baa; /* A-1 600 */
     color: #ecf0f7; /* N-1 50 */
     font-weight: bold;
