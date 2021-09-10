@@ -60,7 +60,7 @@ a:visited {
 
     background-color: #234baa; /* A-1 600 */
     color: #ecf0f7; /* N-1 50 */
-    font-weight: bold;
+    font-weight: 500;
     border: none;
     border-radius: 48px;
     text-decoration: none;
