@@ -104,3 +104,10 @@ p:not(:last-child) {
         color: #191b1f; /* N-1 900 */
     }
 }
+
+@media only screen and (max-width: 450px) {
+    article {
+        border-radius: 0;
+        height: 100%;
+    }
+}
