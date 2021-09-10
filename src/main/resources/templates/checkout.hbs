@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <title>Buy {{product.name}} · {{config.external.patreon.creatorName}}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <link rel="stylesheet" href="/static/style_stripe.css">
+        <link rel="stylesheet" href="/static/style.css">
         <script src="https://js.stripe.com/v3/"></script>
 
         <meta property="og:type" content="website">
@@ -17,18 +17,23 @@
     </head>
 
     <body>
-        <section>
-            <div class="product">
-                <img src="{{product.imageUrl}}" alt="{{product.name}}" width="64" height="64" />
-                <div class="description">
-                    <h3>{{product.name}}</h3>
-                    <h5>{{formattedPrice}}</h5>
+        <article>
+            <section class="product-card">
+                <div class="product-info">
+                    <img class="product-icon" src="{{product.imageUrl}}" alt="{{product.name}}" width="64" height="64" />
+                    <div class="product-details">
+                        <span class="product-title">{{product.name}}</span>
+                        <span class="product-price">{{formattedPrice}}</span>
+                    </div>
                 </div>
-            </div>
-            <button type="button" id="checkout-button">Buy early access</button>
-        </section>
 
-        <script type="text/javascript">
+                <div class="button-container">
+                    <a class="link-button" role="button" id="checkout-button" href="javascript:void">Buy early access</a>
+                </div>
+            </section>
+        </article>
+
+        <script>
             let stripe = Stripe("{{config.external.stripe.publicKey}}");
             let checkoutButton = document.getElementById("checkout-button");
 

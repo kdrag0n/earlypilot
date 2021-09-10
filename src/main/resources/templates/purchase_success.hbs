@@ -4,13 +4,13 @@
         <meta charset="utf-8">
         <title>Thank you for purchasing {{product.name}}!</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <link rel="stylesheet" href="/static/style_doc.css">
+        <link rel="stylesheet" href="/static/style.css">
 
         <meta name="robots" content="noindex">
     </head>
 
     <body>
-        <article>
+        <article class="document-card">
             <header>
                 <h1>Thank you!</h1>
             </header>
@@ -18,9 +18,9 @@
             <section>
                 <p>Thank you for supporting me and my work! I really appreciate it. People like you help me keep working on Android projects for everyone to enjoy.</p>
 
-                <p class="button-container">
+                <div class="button-container">
                     <a class="link-button" role="button" href="{{firstDownloadLink}}">Download {{product.name}}</a>
-                </p>
+                </div>
 
                 <p>By using the download link, <strong>you agree to the <a href="https://kdrag0n.dev/terms-of-service">End-User License Agreement</a>.</strong> The link will work for a month. Sharing downloads is strictly prohibited and will result in a permanent ban.</p>
 

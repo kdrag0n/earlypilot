@@ -84,8 +84,40 @@ a:visited {
     text-align: center;
 }
 
-p:not(:last-child) {
+p:not(:last-child), .button-container:not(:last-child) {
     padding-bottom: 16px;
+}
+
+.product-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.product-info {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.product-icon {
+    margin-right: 24px;
+    border-radius: 32px;
+}
+
+.product-details {
+    line-height: 1.75;
+}
+
+.product-title {
+    display: block;
+    font-weight: 500;
+}
+
+.product-price {
+    display: block;
+    color: #44464b; /* N-1 700 */
 }
 
 /* Dark theme overrides - default is light theme */
@@ -129,10 +161,14 @@ p:not(:last-child) {
     .link-button:visited {
         color: #191b1f; /* N-1 900 */
     }
+
+    .product-price {
+        color: #c2c6cd; /* N-1 200 */
+    }
 }
 
 @media only screen and (max-width: 500px) {
-    article {
+    article.document-card {
         border-radius: 0;
         height: 100%;
         padding-top: 0;
