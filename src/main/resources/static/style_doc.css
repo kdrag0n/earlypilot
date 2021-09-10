@@ -67,6 +67,13 @@ a:visited {
     padding: 16px;
 
     text-decoration: none !important;
+
+    /* Click animation */
+    transition: background-color 150ms ease;
+}
+
+.link-button:active {
+    background-color: #3963c8; /* A-1 500 */
 }
 
 .button-container {
@@ -109,6 +116,10 @@ p:not(:last-child) {
     .link-button {
         background-color: #a0c1ff; /* A-1 200 */
         color: #191b1f; /* N-1 900 */
+    }
+
+    .link-button:active {
+        background-color: #cfe1ff; /* A-1 100 */
     }
 }
 
