@@ -78,6 +78,8 @@ data class Config(
             val personalName: String,
             val personalAddress: String,
 
+            val supportAddress: String,
+
             val messageTemplates: MessageTemplates,
         ) {
             data class MessageTemplates(
