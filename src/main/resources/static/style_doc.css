@@ -76,6 +76,10 @@ a:visited {
     background-color: #3963c8; /* A-1 500 */
 }
 
+.link-button:visited {
+    color: #ecf0f7; /* N-1 50 */
+}
+
 .button-container {
     text-align: center;
 }
@@ -120,6 +124,10 @@ p:not(:last-child) {
 
     .link-button:active {
         background-color: #cfe1ff; /* A-1 100 */
+    }
+
+    .link-button:visited {
+        color: #191b1f; /* N-1 900 */
     }
 }
 
