@@ -123,9 +123,11 @@ p:not(:last-child) {
     }
 }
 
-@media only screen and (max-width: 450px) {
+@media only screen and (max-width: 500px) {
     article {
         border-radius: 0;
         height: 100%;
+        padding-top: 0;
+        padding-bottom: 0;
     }
 }
