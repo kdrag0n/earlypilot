@@ -13,10 +13,13 @@ class PriceManager(
     private val currencyFormat: NumberFormat,
 ) {
     private val minPrice = config.payments.minPriceCents.toDouble() / 100
-    private val conversionRates = calcConversionFactors(
-        ppp = readLatestRates(PPP_RATES_PATH),
-        exchange = readLatestRates(EXCHANGE_RATES_PATH),
-    )
+    private val conversionRates = readLatestRates(PPP_RATES_PATH)
+
+    init {
+        if (DEBUG_PPP_RATES) {
+            printRates()
+        }
+    }
 
     suspend fun getPriceForProduct(product: Product, clientIp: String): Int {
         val country = try {
@@ -36,29 +39,26 @@ class PriceManager(
         return (newPrice * 100).toInt()
     }
 
-    private fun calcConversionFactors(
-        ppp: Map<String, Double>,
-        exchange: Map<String, Double>,
-    ): Map<String, Double> {
-        return ppp.mapNotNull {
-            // Country not found = 1.0
-            val exchangeRate = exchange[it.key] ?: it.value
-            it.key to (it.value / exchangeRate)
-        }.toMap()
-    }
-
     private fun readLatestRates(csvPath: String): Map<String, Double> {
         val inputStream = Thread.currentThread().contextClassLoader.getResourceAsStream(csvPath)
             ?: error("Rates not found: $csvPath")
 
         return csvReader().open(inputStream) {
+            // Skip data source and last update date
+            repeat(4) { readNext() }
+
             readAllWithHeaderAsSequence()
-                .map { row ->
-                    RateItem(
-                        country = row["LOCATION"]!!,
-                        year = row["TIME"]!!.toInt(),
-                        rate = row["Value"]!!.toDouble(),
-                    )
+                .filter { row -> row["Indicator Code"] == "PA.NUS.PPPC.RF" }
+                .flatMap { row ->
+                    row.entries.asSequence()
+                        .filter { it.key.toIntOrNull() != null && it.value.isNotEmpty() }
+                        .map {
+                            RateItem(
+                                country = row["Country Code"]!!,
+                                year = it.key.toInt(),
+                                rate = it.value.toDouble(),
+                            )
+                        }
                 }
                 .groupBy { it.country }
                 .mapValues { entry -> entry.value.maxByOrNull { it.year }!!.rate }
@@ -66,9 +66,13 @@ class PriceManager(
         }
     }
 
+    private fun printRates() = conversionRates.forEach { (country, rate) ->
+        logger.debug("$country -> $rate")
+    }
+
     companion object {
-        private const val PPP_RATES_PATH = "data/oecd_ppp_rates.csv"
-        private const val EXCHANGE_RATES_PATH = "data/oecd_exchange_rates.csv"
+        private const val PPP_RATES_PATH = "data/wdi_ppp_rates.csv"
+        private const val DEBUG_PPP_RATES = false
 
         private val logger = LoggerFactory.getLogger(PriceManager::class.java)
     }
