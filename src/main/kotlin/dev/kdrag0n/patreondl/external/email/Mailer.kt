@@ -23,7 +23,7 @@ class Mailer(
             }
         }
     }
-    private val creatorEmail = "${config.external.patreon.creatorName} <${config.external.email.fromAddress}>"
+    private val creatorEmail = "${config.external.patreon.creatorName} <${config.external.email.dunningAddress}>"
     private val personalEmail = "${config.external.email.personalName} <${config.external.email.personalAddress}>"
 
     suspend fun sendEmail(

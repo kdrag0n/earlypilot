@@ -78,6 +78,7 @@ data class Config(
             val personalName: String,
             val personalAddress: String,
 
+            val dunningAddress: String,
             val supportAddress: String,
 
             val messageTemplates: MessageTemplates,
