@@ -35,6 +35,11 @@ class DunningMailer(
             "downloadCount" to downloadCount,
         ))
 
-        mailer.sendEmail(user, subject, messageText, personal = reminderId >= 3)
+        mailer.sendEmail(
+            user,
+            subject,
+            messageText,
+            type = if (reminderId >= 3) EmailType.PERSONAL else EmailType.CREATOR,
+        )
     }
 }

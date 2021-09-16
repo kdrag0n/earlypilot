@@ -3,13 +3,11 @@ package dev.kdrag0n.patreondl.external.email
 import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.data.User
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.engine.apache.*
 import io.ktor.client.features.auth.*
 import io.ktor.client.features.auth.providers.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
-import io.ktor.http.*
 
 class Mailer(
     config: Config,
@@ -23,17 +21,21 @@ class Mailer(
             }
         }
     }
-    private val creatorEmail = "${config.external.patreon.creatorName} <${config.external.email.dunningAddress}>"
-    private val personalEmail = "${config.external.email.personalName} <${config.external.email.personalAddress}>"
+
+    private val senders = mapOf(
+        EmailType.CREATOR to "${config.external.patreon.creatorName} <${config.external.email.fromAddress}>",
+        EmailType.DUNNING to "${config.external.patreon.creatorName} <${config.external.email.dunningAddress}>",
+        EmailType.PERSONAL to "${config.external.email.personalName} <${config.external.email.personalAddress}>",
+    )
 
     suspend fun sendEmail(
         toAddress: String,
         toName: String?,
         subject: String,
         bodyText: String,
-        personal: Boolean = false,
+        type: EmailType = EmailType.CREATOR,
     ) {
-        val fromEmail = if (personal) personalEmail else creatorEmail
+        val fromEmail = senders[type]!!
         val toEmail = if (toName == null) toAddress else "$toName <$toAddress>"
         client.post<HttpStatement>("https://api.mailgun.net/v3/mg.kdrag0n.dev/messages") {
             parameter("from", fromEmail)
@@ -47,16 +49,22 @@ class Mailer(
         user: User,
         subject: String,
         bodyText: String,
-        personal: Boolean = false,
+        type: EmailType = EmailType.CREATOR,
     ) {
         sendEmail(
             user.email,
             user.name,
             subject,
             bodyText,
-            personal = personal,
+            type = type,
         )
     }
 }
 
 class MailgunException(message: String) : Exception(message)
+
+enum class EmailType {
+    CREATOR,
+    DUNNING,
+    PERSONAL
+}
