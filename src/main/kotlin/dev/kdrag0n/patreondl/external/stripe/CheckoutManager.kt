@@ -14,7 +14,6 @@ import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.util.*
 
@@ -157,21 +156,12 @@ class CheckoutManager(
         ))
 
         // Send email
-        runCatching {
-            mailer.sendEmail(
-                toAddress = email,
-                toName = null,
-                subject = "Thank you for purchasing ${product.name}!",
-                bodyText = messageText,
-            )
-        }.onFailure {
-            // Remove this purchase's info if it failed
-            // This allows Stripe to retry sending the webhook, or manual resending in the worst case
-            newSuspendedTransaction {
-                Grants.deleteWhere { (Grants.type eq Grant.Type.PURCHASE) and (Grants.tag eq purchase.id.value.toString()) }
-                Purchases.deleteWhere { Purchases.id eq purchase.id.value }
-            }
-        }.getOrThrow()
+        mailer.sendEmail(
+            toAddress = email,
+            toName = null,
+            subject = "Thank you for purchasing ${product.name}!",
+            bodyText = messageText,
+        )
     }
 
     suspend fun refundCharge(charge: Charge) {
