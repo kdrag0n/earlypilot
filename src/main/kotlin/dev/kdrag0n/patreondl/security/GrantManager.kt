@@ -2,8 +2,7 @@ package dev.kdrag0n.patreondl.security
 
 import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.data.Grant
-import io.ktor.application.*
-import io.ktor.request.*
+import io.ktor.http.*
 import io.ktor.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.encodeToString
@@ -13,11 +12,11 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 import java.time.Instant
 
 class GrantManager(
-    config: Config,
+    private val config: Config,
 ) {
     private val encrypter = AuthenticatedEncrypter(hex(config.web.grantKey))
 
-    fun generateGrantKey(grant: Grant): String {
+    private fun generateGrantKey(grant: Grant): String {
         val grantInfo = GrantInfo(
             grantId = grant.id.value,
         )
@@ -29,7 +28,7 @@ class GrantManager(
         return Base64.encodeBase64String(encrypter.encrypt(grantJson.encodeToByteArray()))
     }
 
-    suspend fun generateGrantKey(
+    private suspend fun createGrantKey(
         targetPath: String,
         tag: String,
         type: Grant.Type,
@@ -48,34 +47,28 @@ class GrantManager(
         return generateGrantKey(grant)
     }
 
-    fun generateGrantUrl(
-        call: ApplicationCall,
+    private fun generateRawGrantUrl(
         targetPath: String,
         grantKey: String,
     ): String {
-        return call.url {
-            parameters.clear()
+        return URLBuilder(config.web.baseUrl).apply {
             path(targetPath.trimStart('/'))
             parameters["grant"] = grantKey
-        }
+        }.buildString()
     }
 
-    fun generateGrantUrl(
-        call: ApplicationCall,
-        grant: Grant,
-    ): String {
+    fun generateGrantUrl(grant: Grant): String {
         val grantKey = generateGrantKey(grant)
-        return generateGrantUrl(call, grant.path, grantKey)
+        return generateRawGrantUrl(grant.path, grantKey)
     }
 
-    suspend fun generateGrantUrl(
-        call: ApplicationCall,
+    suspend fun createGrantUrl(
+        targetPath: String,
         tag: String,
         type: Grant.Type,
         durationHours: Float,
     ): String {
-        val path = call.request.path()
-        val grantKey = generateGrantKey(path, tag, type, durationHours)
-        return generateGrantUrl(call, path, grantKey)
+        val grantKey = createGrantKey(targetPath, tag, type, durationHours)
+        return generateRawGrantUrl(targetPath, grantKey)
     }
 }

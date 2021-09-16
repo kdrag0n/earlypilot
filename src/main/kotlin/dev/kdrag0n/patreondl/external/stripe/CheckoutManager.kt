@@ -13,6 +13,7 @@ import dev.kdrag0n.patreondl.security.GrantManager
 import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.util.*
@@ -77,23 +78,18 @@ class CheckoutManager(
         }
     }
 
-    private suspend fun generateGrantLinks(
+    private suspend fun createGrantLinks(
         quantity: Long,
         purchaseId: Int,
         targetPath: String,
     ) = (1..quantity).map { idx ->
-        val grantKey = grantManager.generateGrantKey(
+        val url = grantManager.createGrantUrl(
             targetPath = "/$targetPath",
             tag = "$purchaseId",
             type = Grant.Type.PURCHASE,
             // 1 month
             durationHours = 31f * 24,
         )
-
-        val url = URLBuilder(config.web.baseUrl).apply {
-            path(targetPath)
-            parameters["grant"] = grantKey
-        }.buildString()
 
         if (quantity > 1) {
             "Link $idx: $url"
@@ -109,7 +105,7 @@ class CheckoutManager(
         val (purchase, product) = newSuspendedTransaction {
             // Missing product ID = purchase was tampered with or didn't come from this server
             val productId = session.metadata["productId"]?.toInt()
-                ?: return@newSuspendedTransaction null to null
+                ?: return@newSuspendedTransaction null
 
             // Transaction reference ID for web flow
             val txRefId = UUID.fromString(session.metadata["txRefId"])
@@ -117,32 +113,44 @@ class CheckoutManager(
             val product = Product.findById(productId)
                 ?: error("Stripe returned invalid product ID $productId")
 
-            // Idempotency: don't process duplicate events
-            if (!Purchase.find { Purchases.eventId eq session.id }.limit(1).empty()) {
-                return@newSuspendedTransaction null to product
-            }
-
-            val purchase = Purchase.new {
-                this.product = product
-                eventId = session.id
-                paymentIntentId = session.paymentIntent
-                customerId = session.customer
-                this.quantity = quantity.toInt()
-                this.email = email
-                this.txRefId = txRefId
-            }
+            val purchase = Purchase.find { Purchases.eventId eq session.id }.limit(1).firstOrNull()
+                ?: Purchase.new {
+                    this.product = product
+                    eventId = session.id
+                    paymentIntentId = session.paymentIntent
+                    customerId = session.customer
+                    this.quantity = quantity.toInt()
+                    this.email = email
+                    this.txRefId = txRefId
+                }
 
             purchase to product
-        }
+        } ?: error("Invalid metadata in payment intent")
 
-        // Idempotency: bail out if event is a duplicate
-        if (purchase == null) {
+        // Idempotency: bail out if event has already been fulfilled successfully
+        if (purchase.fulfilled) {
             return
         }
 
-        // Generate grants
-        val targetPath = "exclusive/${product!!.path}"
-        val grantUrls = generateGrantLinks(quantity, purchase.id.value, targetPath)
+        val grantUrls = newSuspendedTransaction {
+            // Find grants and generate links if they already exist (for a fulfillment retry)
+            val existingUrls = Grant.find { (Grants.type eq Grant.Type.PURCHASE) and (Grants.tag eq purchase.id.value.toString()) }
+                .orderBy(Grants.id to SortOrder.ASC)
+                .map { grantManager.generateGrantUrl(it) }
+            if (existingUrls.size > 1) {
+                return@newSuspendedTransaction existingUrls.withIndex()
+                    .map { (idx, url) -> "Link ${idx + 1}: $url" }
+            } else if (existingUrls.isNotEmpty()) {
+                return@newSuspendedTransaction existingUrls
+            }
+
+            // Create new grants and links if they don't already exist
+            val targetPath = "exclusive/${product.path}"
+            newSuspendedTransaction {
+                createGrantLinks(quantity, purchase.id.value, targetPath)
+            }
+        }
+
         val messageTemplate = if (quantity > 1) {
             emailTemplates.multiPurchaseSuccessful
         } else {
@@ -162,6 +170,13 @@ class CheckoutManager(
             subject = "Thank you for purchasing ${product.name}!",
             bodyText = messageText,
         )
+
+        // Mark purchase as fulfilled if everything else succeeded
+        newSuspendedTransaction {
+            Purchase.findById(purchase.id.value)!!.apply {
+                fulfilled = true
+            }
+        }
     }
 
     suspend fun refundCharge(charge: Charge) {

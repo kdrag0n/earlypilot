@@ -99,7 +99,7 @@ fun Application.paymentsModule() {
                     .minByOrNull { it.id.value }
             } ?: return@get call.respond(HttpStatusCode.NotFound)
 
-            val firstLink = grantManager.generateGrantUrl(call, firstGrant)
+            val firstLink = grantManager.generateGrantUrl(firstGrant)
 
             call.respond(MustacheContent("purchase_success.hbs", mapOf(
                 "product" to product,

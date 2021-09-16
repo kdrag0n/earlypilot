@@ -12,6 +12,7 @@ import io.ktor.auth.*
 import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
@@ -57,8 +58,8 @@ private fun Route.exclusiveGetRoute(
         if (grantTag != null && session != null && session.patreonUserId == config.external.patreon.creatorId) {
             // Convert from Float to allow for sub-hour precision in query parameters
             val durationHours = (call.request.queryParameters["expires"] ?: "48").toFloat()
-            val grantUrl = grantManager.generateGrantUrl(
-                call,
+            val grantUrl = grantManager.createGrantUrl(
+                call.request.path(),
                 grantTag,
                 Grant.Type.CREATOR,
                 durationHours,
