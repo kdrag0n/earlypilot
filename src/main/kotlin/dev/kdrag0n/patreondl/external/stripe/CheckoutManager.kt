@@ -136,6 +136,7 @@ class CheckoutManager(
             // Find grants and generate links if they already exist (for a fulfillment retry)
             val existingUrls = Grant.find { (Grants.type eq Grant.Type.PURCHASE) and (Grants.tag eq purchase.id.value.toString()) }
                 .orderBy(Grants.id to SortOrder.ASC)
+                .limit(quantity.toInt())
                 .map { grantManager.generateGrantUrl(it) }
             if (existingUrls.size > 1) {
                 return@newSuspendedTransaction existingUrls.withIndex()
