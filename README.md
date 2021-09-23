@@ -1,6 +1,6 @@
-# Patreon download server
+# Earlypilot
 
-This is an all-in-one server for managing Patreon benefits and Stripe purchases for one-time software downloads.
+This is an all-in-one server for monetizing software development with the early access supporter model, including managing Patreon benefits and Stripe purchases for one-time software downloads.
 
 ## Features
 
