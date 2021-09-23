@@ -45,10 +45,6 @@ For full functionality, credentials for the following APIs and services are requ
 
 Finally, run the server once you've built and configured it: `java -jar build/libs/earlypilot-0.0.1-all.jar -config=config.conf`
 
-### Database
-
-Optionally, the server can store information in a PostgreSQL database for easier debugging and analytics. This can be enabled in the config, as demonstrated by `config.example.conf`.
-
 ## Filters
 
 The default content filter implementation is a simple pass-through filter that serves static data from storage with no modification. No watermarking filters are available in the public source code because making them public would defeat the purpose of watermarking, so you will need to create your own filter if you want to track the source of leaks.
