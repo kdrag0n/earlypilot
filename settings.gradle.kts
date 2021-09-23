@@ -1,1 +1,1 @@
-rootProject.name = "patreon-dl-server"
+rootProject.name = "earlypilot"

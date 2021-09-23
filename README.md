@@ -43,7 +43,7 @@ For full functionality, credentials for the following APIs and services are requ
 - MaxMind GeoIP database
 - PostgreSQL
 
-Finally, run the server once you've built and configured it: `java -jar build/libs/patreon-dl-server-0.0.1-all.jar -config=config.conf`
+Finally, run the server once you've built and configured it: `java -jar build/libs/earlypilot-0.0.1-all.jar -config=config.conf`
 
 ### Database
 
