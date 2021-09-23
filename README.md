@@ -2,6 +2,10 @@
 
 This is an all-in-one server for monetizing software development with the early access supporter model, including managing Patreon benefits and Stripe purchases for one-time software downloads.
 
+<p align="center">
+    <img src="https://user-images.githubusercontent.com/7930239/134460976-c4fff455-e674-419e-b59f-5087c4a6716e.png" alt="Purchase fulfillment page" width="400">
+</p>
+
 ## Features
 
 - Serving content downloads
