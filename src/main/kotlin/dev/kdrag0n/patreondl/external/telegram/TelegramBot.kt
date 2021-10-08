@@ -5,6 +5,7 @@ import dev.inmo.tgbotapi.bot.exceptions.CommonRequestException
 import dev.inmo.tgbotapi.extensions.api.chat.invite_links.createChatInviteLink
 import dev.inmo.tgbotapi.extensions.api.chat.invite_links.revokeChatInviteLink
 import dev.inmo.tgbotapi.extensions.api.chat.members.kickChatMember
+import dev.inmo.tgbotapi.extensions.api.chat.members.unbanChatMember
 import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.sendMessage
@@ -107,7 +108,9 @@ class TelegramBot(
 
     suspend fun removeUser(id: Long) {
         try {
-            bot.kickChatMember(chatId, UserId(id))
+            val user = UserId(id)
+            bot.kickChatMember(chatId, user)
+            bot.unbanChatMember(chatId, user, onlyIfBanned = true)
         } catch (e: CommonRequestException) {
             // People can leave the group voluntarily, so handle this gracefully
             if (e.response.errorCode == 400 && e.response.description == "Bad Request: PARTICIPANT_ID_INVALID") {
