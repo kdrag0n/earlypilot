@@ -104,6 +104,11 @@ class TelegramInviteManager(
 
         val telegramId = user.telegramId ?: return
         telegramBot.removeUser(telegramId)
+
+        newSuspendedTransaction {
+            // Clear invite so the user gets a new invite when re-pledging
+            user.telegramInvite = null
+        }
     }
 
     companion object {
