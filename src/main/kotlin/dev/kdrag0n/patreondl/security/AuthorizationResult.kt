@@ -77,7 +77,7 @@ suspend fun ApplicationCall.respondAuthorizationResult(
         // All other results should redirect back to login
         else -> {
             // Prevent browser from caching the redirect and creating an auth redirect loop
-            response.headers.append(HttpHeaders.CacheControl, "no-store")
+            response.headers.append(HttpHeaders.CacheControl, "no-store, max-age=0")
             respondRedirect("/login")
         }
     }
