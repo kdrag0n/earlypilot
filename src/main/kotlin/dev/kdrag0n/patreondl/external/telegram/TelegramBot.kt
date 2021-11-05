@@ -4,13 +4,13 @@ import dev.inmo.tgbotapi.bot.Ktor.telegramBot
 import dev.inmo.tgbotapi.bot.exceptions.CommonRequestException
 import dev.inmo.tgbotapi.extensions.api.chat.invite_links.createChatInviteLink
 import dev.inmo.tgbotapi.extensions.api.chat.invite_links.revokeChatInviteLink
-import dev.inmo.tgbotapi.extensions.api.chat.members.kickChatMember
+import dev.inmo.tgbotapi.extensions.api.chat.members.banChatMember
 import dev.inmo.tgbotapi.extensions.api.chat.members.unbanChatMember
 import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.sendMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
-import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviour
+import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onChatMemberUpdated
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.utils.requireFromUserMessage
@@ -23,7 +23,6 @@ import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.data.User
 import dev.kdrag0n.patreondl.data.Users
 import dev.kdrag0n.patreondl.splitWhitespace
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.slf4j.LoggerFactory
@@ -42,7 +41,7 @@ class TelegramBot(
     suspend fun start() {
         logger.info("Starting bot with long polling")
 
-        bot.buildBehaviour(GlobalScope) {
+        bot.buildBehaviourWithLongPolling {
             // Link Patreon and Telegram users together
             onChatMemberUpdated { event ->
                 // Validate chat
@@ -109,7 +108,7 @@ class TelegramBot(
     suspend fun removeUser(id: Long) {
         try {
             val user = UserId(id)
-            bot.kickChatMember(chatId, user)
+            bot.banChatMember(chatId, user)
             bot.unbanChatMember(chatId, user, onlyIfBanned = true)
         } catch (e: CommonRequestException) {
             // People can leave the group voluntarily, so handle this gracefully
