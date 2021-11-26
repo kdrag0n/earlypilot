@@ -68,7 +68,7 @@ fun Application.installPatronSessions() {
 
     install(Sessions) {
         cookie<PatronSession>("patronSession") {
-            cookie.extensions["SameSite"] = "Strict"
+            cookie.extensions["SameSite"] = "Lax"
             cookie.secure = config.web.httpsOnly
 
             val ivGen = SecureRandom.getInstanceStrong()
