@@ -60,7 +60,7 @@ class TelegramInviteManager(
 
             logger.info("Generating Telegram invite link for Patreon user ${user.id}")
             val invite = try {
-                telegramBot.generateInvite()
+                telegramBot.generateInvite("Patreon user ${user.id}")
             } catch (e: Exception) {
                 logger.error("Failed to generate Telegram invite link for Patreon user ${user.id}", e)
                 null
