@@ -29,7 +29,6 @@ import java.security.DigestOutputStream
 import java.security.MessageDigest
 import java.time.Instant
 
-@OptIn(KtorExperimentalAPI::class)
 fun Application.exclusiveModule() {
     val config: Config by inject()
     val telegramManager: TelegramInviteManager by inject()

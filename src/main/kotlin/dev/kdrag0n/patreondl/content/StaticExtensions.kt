@@ -77,7 +77,6 @@ private suspend inline fun ApplicationCall.respondStaticFile(
     }
 }
 
-@KtorExperimentalAPI
 private suspend inline fun PipelineContext<Unit, ApplicationCall>.respondFiles(
     dir: File,
     compressedTypes: List<CompressedFileType>?,
@@ -89,7 +88,6 @@ private suspend inline fun PipelineContext<Unit, ApplicationCall>.respondFiles(
     call.respondStaticFile(respFile, compressedTypes)
 }
 
-@KtorExperimentalAPI
 fun Route.filesWithIndex(folder: File, index: String) {
     val dir = staticRootFolder.combine(folder)
     val compressedTypes = staticContentEncodedTypes
@@ -101,5 +99,4 @@ fun Route.filesWithIndex(folder: File, index: String) {
     }
 }
 
-@KtorExperimentalAPI
 fun Route.filesWithIndex(folder: String, index: String): Unit = filesWithIndex(File(folder), index)
