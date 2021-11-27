@@ -5,6 +5,8 @@ import dev.kdrag0n.patreondl.content.filters.ContentFilter
 import dev.kdrag0n.patreondl.data.AccessType
 import dev.kdrag0n.patreondl.data.DownloadEvent
 import dev.kdrag0n.patreondl.data.Grant
+import dev.kdrag0n.patreondl.external.telegram.TelegramInviteManager
+import dev.kdrag0n.patreondl.respondErrorPage
 import dev.kdrag0n.patreondl.security.GrantManager
 import dev.kdrag0n.patreondl.security.PatronSession
 import io.ktor.application.*
@@ -30,9 +32,30 @@ import java.time.Instant
 @OptIn(KtorExperimentalAPI::class)
 fun Application.exclusiveModule() {
     val config: Config by inject()
+    val telegramManager: TelegramInviteManager by inject()
 
     routing {
-        // Patron-only content (eligibility already verified)
+        // Patron-only content (tier already verified)
+        authenticate("patronSession") {
+            get("/telegram/join") {
+                val session = call.sessions.get<PatronSession>()!!
+                val invite = telegramManager.getUserInvite(session.patreonUserId)
+
+                if (invite == null) {
+                    call.respondErrorPage(
+                        HttpStatusCode.OK,
+                        "Telegram invite not available",
+                        "Please contact ${config.external.patreon.creatorName} for an invite to the Telegram group. Sorry for the inconvenience!",
+                    )
+                } else {
+                    // Redirect, but don't cache
+                    call.response.headers.append(HttpHeaders.CacheControl, "no-store, max-age=0")
+                    call.respondRedirect(invite, permanent = false)
+                }
+            }
+        }
+
+        // Patreon- and grant-only content
         authenticate("patronSession", "grantLinks") {
             exclusiveGetRoute(config)
 

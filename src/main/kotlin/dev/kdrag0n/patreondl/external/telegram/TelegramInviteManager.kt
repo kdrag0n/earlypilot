@@ -111,6 +111,13 @@ class TelegramInviteManager(
         }
     }
 
+    suspend fun getUserInvite(patreonUserId: String) = newSuspendedTransaction {
+        val user = User.findById(patreonUserId)
+            ?: error("Attempt to get invite for unknown user $patreonUserId")
+
+        user.telegramInvite
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(TelegramInviteManager::class.java)
     }
