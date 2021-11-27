@@ -3,6 +3,7 @@ package dev.kdrag0n.patreondl.security
 import dev.kdrag0n.patreondl.respondErrorPage
 import io.ktor.application.*
 import io.ktor.http.*
+import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.util.*
 
@@ -78,7 +79,10 @@ suspend fun ApplicationCall.respondAuthorizationResult(
         else -> {
             // Prevent browser from caching the redirect and creating an auth redirect loop
             response.headers.append(HttpHeaders.CacheControl, "no-store, max-age=0")
-            respondRedirect("/login")
+            respondRedirect(url {
+                path("login")
+                parameters["next_url"] = request.uri
+            })
         }
     }
 }
