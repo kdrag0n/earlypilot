@@ -49,7 +49,7 @@ class TelegramInviteManager(
         user: PatreonUser,
         email: String,
     ) {
-        val (dbUser, inviteText) = newSuspendedTransaction {
+        val dbUser = newSuspendedTransaction {
             val dbUser = User.findById(user.id)
                 ?: User.new(user.id) { }
 
@@ -72,15 +72,11 @@ class TelegramInviteManager(
                 creationTime = user.attributes.createdAt
                 telegramInvite = invite
             }
-
-            return@newSuspendedTransaction dbUser to (invite
-                ?: "<failed to create Telegram invite link; contact ${config.external.patreon.creatorName} for help>")
         } ?: return
 
         val messageText = emailTemplates.telegramWelcome.execute(mapOf(
             "user" to user,
             "config" to config,
-            "telegramInvite" to inviteText,
         ))
 
         // Send email
