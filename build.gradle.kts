@@ -12,9 +12,9 @@ val tgbotVersion: String by project
 
 plugins {
     application
-    kotlin("jvm") version "1.5.31"
-    id("com.github.johnrengelman.shadow") version "6.1.0"
-    kotlin("plugin.serialization") version "1.5.10"
+    kotlin("jvm") version "1.7.0"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
+    kotlin("plugin.serialization") version "1.7.0"
 }
 
 group = "dev.kdrag0n"
@@ -53,8 +53,8 @@ dependencies {
     // Internal
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("org.apache.commons:commons-compress:1.21")
-    implementation("com.google.guava:guava:31.0.1-jre")
-    implementation("io.sentry:sentry:5.3.0")
+    implementation("com.google.guava:guava:31.1-jre")
+    implementation("io.sentry:sentry:6.0.0")
 
     // Architecture
     implementation("io.insert-koin:koin-core:$koinVersion")
@@ -64,18 +64,18 @@ dependencies {
     // Config
     implementation("com.sksamuel.hoplite:hoplite-core:$hopliteVersion")
     implementation("com.sksamuel.hoplite:hoplite-hocon:$hopliteVersion")
-    implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.1.0")
+    implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.3.0")
 
     // API
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
     implementation("com.patreon:patreon:0.4.2") {
         // Exclude duplicate SLF4J implementation
         exclude(group = "org.slf4j", module = "slf4j-log4j12")
     }
     implementation("dev.inmo:tgbotapi:$tgbotVersion")
     implementation("dev.inmo:tgbotapi.extensions.api:$tgbotVersion")
-    implementation("com.stripe:stripe-java:20.86.1")
-    implementation("com.maxmind.geoip2:geoip2:2.15.0") {
+    implementation("com.stripe:stripe-java:20.127.0")
+    implementation("com.maxmind.geoip2:geoip2:3.0.1") {
         // Newer version of Apache HTTP client breaks Patreon API library
         exclude(group = "org.apache.httpcomponents")
     }
@@ -85,8 +85,8 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
-    implementation("com.zaxxer:HikariCP:5.0.0")
-    implementation("org.postgresql:postgresql:42.3.1")
+    implementation("com.zaxxer:HikariCP:5.0.1")
+    implementation("org.postgresql:postgresql:42.3.6")
 
     testImplementation("io.ktor:ktor-server-tests:$ktorVersion")
 }
