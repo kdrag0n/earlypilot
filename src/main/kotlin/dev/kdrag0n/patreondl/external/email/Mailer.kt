@@ -3,9 +3,10 @@ package dev.kdrag0n.patreondl.external.email
 import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.data.User
 import io.ktor.client.*
+import io.ktor.client.call.*
 import io.ktor.client.engine.apache.*
-import io.ktor.client.features.auth.*
-import io.ktor.client.features.auth.providers.*
+import io.ktor.client.plugins.auth.*
+import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 
@@ -15,9 +16,14 @@ class Mailer(
     private val client = HttpClient(Apache) {
         install(Auth) {
             basic {
-                username = "api"
-                password = config.external.email.apiKey
-                sendWithoutRequest = true
+                credentials {
+                    BasicAuthCredentials(
+                        username = "api",
+                        password = config.external.email.apiKey,
+                    )
+                }
+
+                sendWithoutRequest { true }
             }
         }
     }
@@ -37,12 +43,12 @@ class Mailer(
     ) {
         val fromEmail = senders[type]!!
         val toEmail = if (toName == null) toAddress else "$toName <$toAddress>"
-        client.post<HttpStatement>("https://api.mailgun.net/v3/mg.kdrag0n.dev/messages") {
+        client.post("https://api.mailgun.net/v3/mg.kdrag0n.dev/messages") {
             parameter("from", fromEmail)
             parameter("to", toEmail)
             parameter("subject", subject)
             parameter("text", bodyText)
-        }.execute()
+        }.body<HttpStatement>()
     }
 
     suspend fun sendEmail(

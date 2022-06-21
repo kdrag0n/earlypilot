@@ -2,10 +2,10 @@ package dev.kdrag0n.patreondl.security
 
 import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.data.Grant
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.request.*
-import io.ktor.response.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
 import io.ktor.util.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
@@ -37,7 +37,7 @@ private class GrantAuthenticationProvider(
 ) : AuthenticationProvider(config) {
     val encrypter = AuthenticatedEncrypter(config.grantKey)
 
-    suspend fun validateGrant(path: String, grantData: String?): Pair<Grant?, AuthenticationFailedCause?> {
+    private suspend fun validateGrant(path: String, grantData: String?): Pair<Grant?, AuthenticationFailedCause?> {
         if (grantData == null) {
             return null to AuthenticationFailedCause.NoCredentials
         }
@@ -74,32 +74,32 @@ private class GrantAuthenticationProvider(
         }
     }
 
-    class Configuration(name: String) : AuthenticationProvider.Configuration(name) {
-        var grantKey = ByteArray(0)
-    }
-}
-
-private fun Authentication.Configuration.grants(
-    name: String,
-    configure: GrantAuthenticationProvider.Configuration.() -> Unit
-) {
-    val provider = GrantAuthenticationProvider(GrantAuthenticationProvider.Configuration(name).apply(configure))
-
-    provider.pipeline.intercept(AuthenticationPipeline.RequestAuthentication) { context ->
-        val (grant, failedCause) = provider.validateGrant(
+    override suspend fun onAuthenticate(context: AuthenticationContext) {
+        val call = context.call
+        val (grant, failedCause) = validateGrant(
             call.request.path(),
             call.request.queryParameters["grant"],
         )
 
         if (grant == null) {
-            return@intercept context.challenge(CHALLENGE_KEY, failedCause!!) {
+            context.challenge(CHALLENGE_KEY, failedCause!!) { challenge, call ->
                 call.respond(UnauthorizedResponse())
-                it.complete()
+                challenge.complete()
             }
+        } else {
+            context.principal(grant)
         }
-
-        context.principal(grant)
     }
 
+    class Configuration(name: String) : Config(name) {
+        var grantKey = ByteArray(0)
+    }
+}
+
+private fun AuthenticationConfig.grants(
+    name: String,
+    configure: GrantAuthenticationProvider.Configuration.() -> Unit
+) {
+    val provider = GrantAuthenticationProvider(GrantAuthenticationProvider.Configuration(name).apply(configure))
     register(provider)
 }

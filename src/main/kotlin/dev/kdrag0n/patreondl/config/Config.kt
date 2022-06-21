@@ -1,7 +1,6 @@
 package dev.kdrag0n.patreondl.config
 
 import com.sksamuel.hoplite.ConfigLoader
-import java.io.File
 
 data class Config(
     val web: Web,
@@ -119,6 +118,6 @@ data class Config(
     }
 
     companion object {
-        fun fromFile(path: String) = ConfigLoader().loadConfigOrThrow<Config>(File(path))
+        fun fromFile(path: String) = ConfigLoader().loadConfigOrThrow<Config>(path)
     }
 }

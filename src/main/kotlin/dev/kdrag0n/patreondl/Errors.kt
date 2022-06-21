@@ -1,11 +1,10 @@
 package dev.kdrag0n.patreondl
 
 import dev.kdrag0n.patreondl.config.Config
-import io.ktor.application.*
-import io.ktor.features.*
 import io.ktor.http.*
-import io.ktor.response.*
-import io.ktor.util.pipeline.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
 import io.sentry.Sentry
 import org.koin.ktor.ext.inject
 
@@ -19,21 +18,21 @@ fun Application.errorsModule() {
     }
 
     install(StatusPages) {
-        status(HttpStatusCode.BadRequest) { genericStatusError(it) }
-        status(HttpStatusCode.Unauthorized) { genericStatusError(it) }
-        status(HttpStatusCode.Forbidden) { genericStatusError(it) }
-        status(HttpStatusCode.NotFound) { genericStatusError(it) }
+        status(HttpStatusCode.BadRequest) { call, status -> genericStatusError(call, status) }
+        status(HttpStatusCode.Unauthorized) { call, status -> genericStatusError(call, status) }
+        status(HttpStatusCode.Forbidden) { call, status -> genericStatusError(call, status) }
+        status(HttpStatusCode.NotFound) { call, status -> genericStatusError(call, status) }
 
-        exception<Throwable> { error ->
-            environment.log.error("Uncaught exception in route", error)
+        exception<Throwable> { call, error ->
+            this@errorsModule.environment.log.error("Uncaught exception in route", error)
             Sentry.captureException(error)
 
-            genericStatusError(HttpStatusCode.InternalServerError)
+            genericStatusError(call, HttpStatusCode.InternalServerError)
         }
     }
 }
 
-private suspend fun PipelineContext<*, ApplicationCall>.genericStatusError(status: HttpStatusCode) {
+private suspend fun genericStatusError(call: ApplicationCall, status: HttpStatusCode) {
     call.respondErrorPage(status, "${status.value} ${status.description}")
 }
 

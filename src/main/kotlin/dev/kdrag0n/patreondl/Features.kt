@@ -7,28 +7,34 @@ import dev.kdrag0n.patreondl.external.email.DunningMailer
 import dev.kdrag0n.patreondl.external.email.EmailTemplates
 import dev.kdrag0n.patreondl.external.email.Mailer
 import dev.kdrag0n.patreondl.external.maxmind.GeoipService
+import dev.kdrag0n.patreondl.external.patreon.PatreonApi
 import dev.kdrag0n.patreondl.external.stripe.CheckoutManager
 import dev.kdrag0n.patreondl.external.telegram.TelegramBot
 import dev.kdrag0n.patreondl.external.telegram.TelegramInviteManager
-import dev.kdrag0n.patreondl.external.patreon.PatreonApi
 import dev.kdrag0n.patreondl.payments.PriceManager
 import dev.kdrag0n.patreondl.security.GrantManager
-import io.ktor.application.*
 import io.ktor.client.*
 import io.ktor.client.engine.apache.*
-import io.ktor.features.*
 import io.ktor.http.*
-import io.ktor.locations.*
-import io.ktor.mustache.*
-import io.ktor.serialization.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
+import io.ktor.server.locations.*
+import io.ktor.server.mustache.*
+import io.ktor.server.plugins.autohead.*
+import io.ktor.server.plugins.callloging.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.cors.routing.*
+import io.ktor.server.plugins.forwardedheaders.*
+import io.ktor.server.plugins.partialcontent.*
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
-import org.koin.ktor.ext.Koin
 import org.koin.ktor.ext.inject
+import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 import org.slf4j.event.Level
 import java.text.NumberFormat
 
+@OptIn(KtorExperimentalLocationsAPI::class)
 fun Application.featuresModule() {
     // Dependency injection
     install(Koin) {
@@ -69,25 +75,18 @@ fun Application.featuresModule() {
 
     // Reverse proxy support (X-Forwarded-*)
     if (config.web.forwardedHeaders) {
-        install(XForwardedHeaderSupport) {
+        install(XForwardedHeaders) {
             // Any unused header is a security issue.
-            // TODO: file Ktor issue to avoid using reflection
-            javaClass.getDeclaredField("hostHeaders").let { field ->
-                field.isAccessible = true
-                field.set(this, arrayListOf(HttpHeaders.XForwardedHost))
-            }
-            javaClass.getDeclaredField("protoHeaders").let { field ->
-                field.isAccessible = true
-                field.set(this, arrayListOf(HttpHeaders.XForwardedProto))
-            }
-            javaClass.getDeclaredField("forHeaders").let { field ->
-                field.isAccessible = true
-                field.set(this, arrayListOf(HttpHeaders.XForwardedFor))
-            }
-            javaClass.getDeclaredField("httpsFlagHeaders").let { field ->
-                field.isAccessible = true
-                field.set(this, arrayListOf<String>())
-            }
+            hostHeaders.clear()
+            hostHeaders += HttpHeaders.XForwardedHost
+
+            protoHeaders.clear()
+            protoHeaders += HttpHeaders.XForwardedProto
+
+            forHeaders.clear()
+            forHeaders += HttpHeaders.XForwardedFor
+
+            httpsFlagHeaders.clear()
         }
     }
 
@@ -106,7 +105,7 @@ fun Application.featuresModule() {
 
         val schemes = if (config.web.httpsOnly) listOf("https") else listOf("https", "http")
         for (host in config.web.corsAllowed) {
-            host(host, schemes = schemes)
+            allowHost(host, schemes = schemes)
         }
     }
 

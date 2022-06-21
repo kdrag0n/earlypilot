@@ -1,7 +1,7 @@
 package dev.kdrag0n.patreondl.external.telegram
 
-import dev.inmo.tgbotapi.bot.Ktor.telegramBot
 import dev.inmo.tgbotapi.bot.exceptions.CommonRequestException
+import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.chat.invite_links.createChatInviteLinkWithLimitedMembers
 import dev.inmo.tgbotapi.extensions.api.chat.invite_links.revokeChatInviteLink
 import dev.inmo.tgbotapi.extensions.api.chat.members.banChatMember

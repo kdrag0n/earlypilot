@@ -2,15 +2,17 @@ package dev.kdrag0n.patreondl.external.patreon
 
 import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.external.telegram.TelegramInviteManager
-import io.ktor.application.*
 import io.ktor.http.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.koin.ktor.ext.inject
 
+@OptIn(DelicateCoroutinesApi::class)
 fun Application.webhooksModule() {
     val config: Config by inject()
     val patreonApi: PatreonApi by inject()
@@ -27,7 +29,7 @@ fun Application.webhooksModule() {
             val userId = event.data.relationships.user.data.id
             val email = event.data.attributes.email
 
-            environment.log.info("Invalidating cache for user $userId")
+            this@webhooksModule.environment.log.info("Invalidating cache for user $userId")
             patreonApi.invalidateUser(userId)
 
             val user = event.included
@@ -47,7 +49,7 @@ fun Application.webhooksModule() {
                 }
 
                 // Invalid events
-                else -> environment.log.warn("Patreon webhook: unknown event type $eventType")
+                else -> this@webhooksModule.environment.log.warn("Patreon webhook: unknown event type $eventType")
             }
 
             call.respond(HttpStatusCode.OK)

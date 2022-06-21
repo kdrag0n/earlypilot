@@ -7,8 +7,8 @@ import dev.kdrag0n.patreondl.external.patreon.webhooksModule
 import dev.kdrag0n.patreondl.payments.paymentsModule
 import dev.kdrag0n.patreondl.security.authModule
 import dev.kdrag0n.patreondl.telemetry.telemetryModule
-import io.ktor.locations.*
-import io.ktor.application.*
+import io.ktor.server.application.*
+import io.ktor.server.locations.*
 import io.ktor.server.netty.*
 
 fun main(args: Array<String>) {

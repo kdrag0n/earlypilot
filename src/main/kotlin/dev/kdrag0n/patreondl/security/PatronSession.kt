@@ -3,9 +3,9 @@ package dev.kdrag0n.patreondl.security
 import dev.kdrag0n.patreondl.config.Config
 import dev.kdrag0n.patreondl.data.User
 import dev.kdrag0n.patreondl.external.patreon.PatreonApi
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.sessions.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.sessions.*
 import io.ktor.util.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.koin.ktor.ext.inject

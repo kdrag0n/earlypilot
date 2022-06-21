@@ -1,12 +1,12 @@
 package dev.kdrag0n.patreondl.content
 
-import io.ktor.application.*
-import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.http.content.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.http.content.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import io.ktor.util.*
 import io.ktor.util.pipeline.*
 import java.io.File
@@ -68,7 +68,7 @@ private suspend inline fun ApplicationCall.respondStaticFile(
 ) {
     val bestCompressionFit = requestedFile.bestCompressionFit(request.acceptEncodingItems(), compressedTypes)
     bestCompressionFit?.run {
-        attributes.put(Compression.SuppressionAttribute, true)
+        attributes.put(SuppressionAttribute, true)
     }
     val localFile = bestCompressionFit?.file(requestedFile) ?: requestedFile
     if (localFile.isFile) {

@@ -23,7 +23,6 @@ version = "0.0.1"
 repositories {
     mavenCentral()
     mavenLocal()
-    jcenter()
     maven { url = uri("https://kotlin.bintray.com/ktor") }
 }
 
@@ -37,9 +36,9 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
     // Ktor
-    implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("io.ktor:ktor-auth:$ktorVersion")
-    implementation("io.ktor:ktor-locations:$ktorVersion")
+    implementation("io.ktor:ktor-server:$ktorVersion")
+    implementation("io.ktor:ktor-server-auth:$ktorVersion")
+    implementation("io.ktor:ktor-server-locations:$ktorVersion")
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-core-jvm:$ktorVersion")
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
@@ -47,8 +46,8 @@ dependencies {
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("io.ktor:ktor-server-sessions:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation("io.ktor:ktor-mustache:$ktorVersion")
-    implementation("io.ktor:ktor-serialization:$ktorVersion")
+    implementation("io.ktor:ktor-server-mustache:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
 
     // Internal
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
@@ -73,7 +72,6 @@ dependencies {
         exclude(group = "org.slf4j", module = "slf4j-log4j12")
     }
     implementation("dev.inmo:tgbotapi:$tgbotVersion")
-    implementation("dev.inmo:tgbotapi.extensions.api:$tgbotVersion")
     implementation("com.stripe:stripe-java:20.127.0")
     implementation("com.maxmind.geoip2:geoip2:3.0.1") {
         // Newer version of Apache HTTP client breaks Patreon API library

@@ -3,11 +3,11 @@ package dev.kdrag0n.patreondl.telemetry
 import dev.kdrag0n.patreondl.telemetry.db.SettingsReport
 import dev.kdrag0n.patreondl.telemetry.db.SettingsReports
 import dev.kdrag0n.patreondl.telemetry.model.SettingsReportRequest
-import io.ktor.application.*
 import io.ktor.http.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction

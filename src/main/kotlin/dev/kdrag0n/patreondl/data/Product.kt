@@ -1,12 +1,12 @@
 package dev.kdrag0n.patreondl.data
 
-import io.ktor.auth.*
+import io.ktor.server.auth.*
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.`java-time`.CurrentTimestamp
-import org.jetbrains.exposed.sql.`java-time`.timestamp
+import org.jetbrains.exposed.sql.javatime.CurrentTimestamp
+import org.jetbrains.exposed.sql.javatime.timestamp
 
 object Products : IntIdTable("products") {
     val path = text("path").index()

@@ -1,8 +1,8 @@
 package dev.kdrag0n.patreondl.security
 
 import dev.kdrag0n.patreondl.external.patreon.installPatreonAuthProvider
-import io.ktor.application.*
-import io.ktor.locations.*
+import io.ktor.server.application.*
+import io.ktor.server.locations.*
 
 @KtorExperimentalLocationsAPI
 fun Application.authModule() {

@@ -10,7 +10,6 @@ import dev.kdrag0n.patreondl.external.email.EmailTemplates
 import dev.kdrag0n.patreondl.external.email.EmailTemplates.Companion.execute
 import dev.kdrag0n.patreondl.external.email.Mailer
 import dev.kdrag0n.patreondl.security.GrantManager
-import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.sql.SortOrder

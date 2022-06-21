@@ -3,7 +3,7 @@ package dev.kdrag0n.patreondl.data
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import dev.kdrag0n.patreondl.config.Config
-import io.ktor.application.*
+import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
