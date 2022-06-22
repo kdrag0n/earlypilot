@@ -122,7 +122,7 @@ fun Application.paymentsModule() {
         }
 
         post("/_webhooks/stripe/${config.external.stripe.webhookKey}") {
-            val payload = call.receiveText()
+            val payload = call.request.receiveChannel().readRemaining().readText()
             val event = try {
                 Webhook.constructEvent(
                     payload,
