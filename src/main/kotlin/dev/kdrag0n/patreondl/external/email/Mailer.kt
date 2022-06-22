@@ -48,7 +48,7 @@ class Mailer(
             parameter("to", toEmail)
             parameter("subject", subject)
             parameter("text", bodyText)
-        }.body<HttpStatement>()
+        }.discardRemaining()
     }
 
     suspend fun sendEmail(
