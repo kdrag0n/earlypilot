@@ -43,7 +43,7 @@ class TelegramBot(
 
         bot.buildBehaviourWithLongPolling {
             // Link Patreon and Telegram users together
-            onChatMemberUpdated { event ->
+            onChatMemberUpdated(subcontextUpdatesFilter = null) { event ->
                 // Validate chat
                 if (event.chat.id != chatId) {
                     return@onChatMemberUpdated
