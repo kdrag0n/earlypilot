@@ -73,10 +73,7 @@ dependencies {
     }
     implementation("dev.inmo:tgbotapi:$tgbotVersion")
     implementation("com.stripe:stripe-java:20.127.0")
-    implementation("com.maxmind.geoip2:geoip2:3.0.1") {
-        // Newer version of Apache HTTP client breaks Patreon API library
-        exclude(group = "org.apache.httpcomponents")
-    }
+    implementation("com.maxmind.geoip2:geoip2:3.0.1")
 
     // Database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
