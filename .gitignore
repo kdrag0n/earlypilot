@@ -1,6 +1,7 @@
 *.iml
 .idea
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 .gradle
 build/
 exclusive_src/
